@@ -5,7 +5,7 @@
     "require": {
         "php": ">=7.2"
     },
-    "license": "maciel",
+    "license": "proprietary",
     "authors": [
         {
             "name": "Joylton Maciel",

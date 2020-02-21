@@ -1,0 +1,21 @@
+{
+    "name": "maciel/hello-composer",
+    "description": "First test of composer packagist",
+    "type": "library",
+    "require": {
+        "php": ">=7.2"
+    },
+    "license": "maciel",
+    "authors": [
+        {
+            "name": "Joylton Maciel",
+            "email": "maciel.inbox@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable"
+    "autoload": {
+        "psr-4": {
+            "maciel\\Sdr\\HelloComposer\\": "src/"
+        }
+    }
+}

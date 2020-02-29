@@ -1,8 +1,8 @@
 <?php
 
-namespace Ppdo;
+namespace Mpdo;
 
-class Ppdo
+class MP
 {
 
     protected $pdo;

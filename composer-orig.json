@@ -1,7 +1,7 @@
 {
-    "name": "joyltonmaciel/mpdo",
+    "name": "joyltonmaciel/ppdo",
     "type": "library",
-    "description": "My Personal PDO Library",
+    "description": "Personal PDO Library",
     "license": ["LGPL-3.0-or-later", "GPL-3.0-or-later", "MIT"],
     "authors": [
 		{
@@ -15,7 +15,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Mpdo\\": "src/"
+            "Ppdo\\": "src/"
         }
     },
     "minimum-stability": "stable"

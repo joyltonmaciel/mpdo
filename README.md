@@ -3,4 +3,4 @@
 Database Manipulation
 
 install:
-composer require joyltonmaciel/ppdo:dev-master
+composer require joyltonmaciel/mpdo:dev-master

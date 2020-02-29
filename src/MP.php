@@ -72,7 +72,7 @@ class MP
         if (empty($formulario)) {
             $formulario = $_SESSION['PARAMETERS']->form->viewtitle;
         }
-        Auditoria::save($this->connection, $auditoria, $formulario);
+        // Auditoria::save($this->connection, $auditoria, $formulario);
 
         // pg_query_params($this->connection, 'COMMIT');
         pg_query($this->connection, 'COMMIT');
@@ -120,14 +120,14 @@ class MP
             throw new \Exception("Erro ao gravar registro.");
         }
 
-        // Registra o acontecimento na auditoria
+        // Registra o acontecimento na // Auditoria
         if (empty($auditoria)) {
             $auditoria = "Registro alterado.";
         }
         if (empty($formulario)) {
             $formulario = $_SESSION['PARAMETERS']->form->viewtitle;
         }
-        Auditoria::save($this->connection, $auditoria, $formulario);
+        // Auditoria::save($this->connection, $auditoria, $formulario);
     }
 
     public function delete()
@@ -161,7 +161,7 @@ class MP
         if (empty($formulario)) {
             $formulario = $_SESSION['PARAMETERS']->form->viewtitle;
         }
-        Auditoria::save($this->connection, $auditoria, $formulario);
+        // Auditoria::save($this->connection, $auditoria, $formulario);
     }
 
     public function conn($connection)
@@ -565,7 +565,7 @@ class MP
     public static function getDotEnvData()
     {
         if (file_exists('/.env')) {
-            return parse_ini_file('/.enf');
+            return parse_ini_file('/.env');
         } else {
             throw new \Exception("No Database settings.");
         }

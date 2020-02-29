@@ -564,7 +564,11 @@ class MDB
      */
     public static function getDotEnvData()
     {
-        if (file_exists('/.env')) {
+        
+        echo "dir: " . __DIR__;
+        
+        if (file_exists('.env')) {
+            echo "dot env exists";
             return parse_ini_file('/.env');
         } else {
             throw new \Exception("No Database settings.");

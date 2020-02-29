@@ -1,3 +1,2 @@
-# PPDO
-### Personal PDO
-##### Database Manipulation
+# PPDO - My Personal PDO
+Database Manipulation

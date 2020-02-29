@@ -5,7 +5,7 @@ namespace Mpdo;
 use stdClass;
 
 /**
- * MP.php
+ * MDB.php
  * by Joylton Maciel at November 8th, 2020.
  * 
  * DabaBase connection and manipulation.
@@ -24,7 +24,7 @@ use stdClass;
  * print_r($result);
  */
 
-class MP
+class MDB
 {
     public static function Open($database = '')
     {

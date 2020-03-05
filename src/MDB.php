@@ -172,13 +172,22 @@ class MDB
         // Auditoria::save($this->connection, $auditoria, $formulario);
     }
 
-    public function select($select = '*')
+    public function select()
     {
-        if (!isset($this->select)) {
-            $this->select = $select;
-        } else {
-            $this->select .= ', ' . $select;
+        $args = func_get_args();
+
+        if (count($args) <= 0) {
+            $args[0] = '*';
         }
+
+        foreach ($args as $content) {
+            if (isset($this->select)) {
+                $this->select .= ', ' . $content;
+            } else {
+                $this->select = $content;
+            }
+        }
+
         return $this;
     }
 
@@ -312,6 +321,16 @@ class MDB
         return $this;
     }
 
+    public function whereNotNull($whereNotNull)
+    {
+        if (!isset($this->where)) {
+            $this->where = ' where ' . $whereNotNull . ' is not null ';
+        } else {
+            $this->where .= ' and ' . $whereNotNull . ' is not null ';
+        }
+        return $this;
+    }
+
     public function orderBy($orderby)
     {
         if (!isset($this->orderby)) {
@@ -319,6 +338,12 @@ class MDB
         } else {
             $this->orderby .= ', ' . $orderby;
         }
+        return $this;
+    }
+
+    public function noKey()
+    {
+        $this->noKey = true;
         return $this;
     }
 
@@ -339,34 +364,34 @@ class MDB
         if (!isset($this->params)) $this->params = [];
 
         // command
-        $this->sql = 'select ';
+        $sql = 'select ';
 
         // fields to return
         if (!isset($this->select)) $this->select();
-        $this->sql .= $this->select;
+        $sql .= $this->select;
 
         // table name
         if (!isset($this->table)) throw new \Exception("SQL: Tabela indefinida.");
-        $this->sql .= $this->table;
+        $sql .= $this->table;
 
         // join
-        if (isset($this->join)) $this->sql .= $this->join;
+        if (isset($this->join)) $sql .= $this->join;
 
         // condition
-        if (isset($this->where)) $this->sql .= $this->where;
+        if (isset($this->where)) $sql .= $this->where;
 
         // order by
-        if (isset($this->orderby)) $this->sql .= $this->orderby;
+        if (isset($this->orderby)) $sql .= $this->orderby;
 
         // limit
-        if ($limit > 0) $this->sql .= ' limit ' . $limit;
+        if ($limit > 0) $sql .= ' limit ' . $limit;
 
         // prepare and execute the statment
-        $result = $this->connection->prepare($this->sql);
+        $result = $this->connection->prepare($sql);
         $result->execute($this->params);
 
         // show the SQL command on screen
-        $this->showDebug($result);
+        $this->showDebug($result, $sql);
 
         return $this->Result($result);
     }
@@ -379,14 +404,12 @@ class MDB
      */
     public function execute($sql)
     {
-        $this->sql = $sql;
-
         // run que query (command)
-        // $result = pg_query_params($this->connection, $this->sql);
-        $result = $this->connection->query($this->sql);
+        // $result = pg_query_params($this->connection, $sql);
+        $result = $this->connection->query($sql);
 
         // show the SQL command on screen
-        $this->showDebug($result);
+        $this->showDebug($result, $sql);
 
         return $this->Result($result);
     }
@@ -415,19 +438,24 @@ class MDB
         $count = 0;
         $eof = true;
         $fields = new stdClass();
+
         foreach ($result->fetchAll() as $i => $record) {
-            if (isset($this->key)) {
-                if (empty($this->rules)) {
-                    $fields->{$record[$this->key]} = json_decode(json_encode($record));
-                } else {
-                    if ($this->rules == 'onlynumbers') {
-                        $fields->{self::onlyNumbers(trim($record[$this->key]))} = $record;
-                    } else {
-                        $fields->{trim($record[$this->key])} = $record;
-                    }
-                }
-            } else {
+            if (isset($this->noKey)) {
                 $fields = json_decode(json_encode($record));
+            } else {
+                if (isset($this->key)) {
+                    if (empty($this->rules)) {
+                        $fields->{trim($record[$this->key])} = json_decode(json_encode($record));
+                    } else {
+                        if ($this->rules == 'onlynumbers') {
+                            $fields->{self::onlyNumbers(trim($record[$this->key]))} = json_decode(json_encode($record));
+                        } else {
+                            $fields->{trim($record[$this->key])} = json_decode(json_encode($record));
+                        }
+                    }
+                } else {
+                    $fields->{$i} = json_decode(json_encode($record));
+                }
             }
             $count++;
         }
@@ -447,7 +475,7 @@ class MDB
         return $this;
     }
 
-    public function showDebug($result)
+    public function showDebug($result, $sql)
     {
         if (isset($this->debug)) {
             if ($this->debug) {
@@ -455,7 +483,7 @@ class MDB
                 echo "\n<hr>";
                 echo "\nDb - Dababase Manipulation Class";
                 echo "\nSQL:";
-                echo "\n" . $this->sql;
+                echo "\n" . $sql;
                 echo "\nPARAMETERS:\n";
                 print_r($this->params);
                 echo "\nMESSAGE:\n";
@@ -488,9 +516,8 @@ class MDB
         $file = __DIR__ . '/../../../../.env';
         if (file_exists($file)) {
             return json_decode(json_encode(parse_ini_file($file)));
-        } else {
-            throw new \Exception("No Database settings.");
         }
+        throw new \Exception("No Database settings.");
     }
 
     public function cleanAll()
@@ -499,7 +526,6 @@ class MDB
         if (isset($this->key)) unset($this->key);
         if (isset($this->orderby)) unset($this->orderby);
         if (isset($this->params)) unset($this->params);
-        if (isset($this->sql)) unset($this->sql);
         if (isset($this->select)) unset($this->select);
         if (isset($this->table)) unset($this->table);
         if (isset($this->where)) unset($this->where);

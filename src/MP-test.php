@@ -2,7 +2,7 @@
 
 namespace Mpdo;
 
-class MP
+class FakeMDB
 {
 
     protected $pdo;

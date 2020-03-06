@@ -39,47 +39,64 @@ class MDB
 
     public function insert($dados, $auditoria = '', $formulario = '')
     {
-        $this->connection->beginTransaction();
-        // $idList = [];
+        try {
+            $this->connection->beginTransaction();
+            // $idList = [];
 
-        foreach ($dados as $table => $records) {
+            foreach ($dados as $table => $records) {
 
-            // compose the sql statement
-            $fields = '';
-            $values = '';
-            foreach ($records as $campo => $content) {
-                if (!empty($fields)) {
-                    $fields .= ', ';
-                    $values .= ', ';
+                // compose the sql statement
+                $fields = '';
+                $values = '';
+                foreach ($records as $campo => $content) {
+                    if (!empty($fields)) {
+                        $fields .= ', ';
+                        $values .= ', ';
+                    }
+                    $fields .= $campo;
+                    $values .= ':' . $campo;
+                    $assoc_array[$campo] = $content;
                 }
-                $fields .= $campo;
-                $values .= ':' . $campo;
-                $assoc_array[$campo] = $content;
+
+                // prepare and execute the statement
+                $sql = 'INSERT INTO ' . $table . ' (' . $fields . ') VALUES (' . $values . ')';
+                $conn = $this->connection->prepare($sql);
+                foreach ($assoc_array as $campo => $content) {
+                    $conn->bindValue(':' . $campo, $content);
+                }
+                $conn->execute();
+                // $idList[] = $this->connection->lastInsertId('stocks_id_seq');
             }
 
-            // prepare and execute the statement
-            $sql = 'INSERT INTO ' . $table . ' (' . $fields . ') VALUES (' . $values . ')';
-            $conn = $this->connection->prepare($sql);
-            foreach ($assoc_array as $campo => $content) {
-                $conn->bindValue(':' . $campo, $content);
-            }
-            $conn->execute();
-            // $idList[] = $this->connection->lastInsertId('stocks_id_seq');
+            // Registra o acontecimento na auditoria
+            // if (empty($auditoria)) {
+            //     $auditoria = "Novo registro.";
+            // }
+            // if (empty($formulario)) {
+            //     $formulario = $_SESSION['PARAMETERS']->form->viewtitle;
+            // }
+
+            // Auditoria::save($this->connection, $auditoria, $formulario);
+
+            $this->connection->commit();
+            // return $idList;
+        } catch (\Exception $e) {
+            $this->pdo->rollBack();
+            throw new \Exception("Gravar: " . $e->getMessage());
         }
-
-        // Registra o acontecimento na auditoria
-        // if (empty($auditoria)) {
-        //     $auditoria = "Novo registro.";
+        // try {
+        //     $PDO_db = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=UTF-8', DB_USER, DB_PWD);
+        //     $PDO_db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        //     $sth = $PDO_db->prepare($insert);
+        //     echo 'Insert prepared<br/>';
+        //     $arrPar = array(':nome' =>  $nome); //shouldn't this be :name?
+        //     $r = $sth->execute($arrPar);
+        //     echo 'Insert executed<br/>';
+        //     var_dump($r);
+        // } catch (PDOException $pdoE) {
+        //     echo $pdoE->getMessage() . '<br/>';
+        //     var_dump($pdoE);
         // }
-        // if (empty($formulario)) {
-        //     $formulario = $_SESSION['PARAMETERS']->form->viewtitle;
-        // }
-
-        // Auditoria::save($this->connection, $auditoria, $formulario);
-
-        $this->connection->commit();
-        // return $idList;
-
     }
 
     public function update($dados, $auditoria = '', $formulario = '')
@@ -529,5 +546,7 @@ class MDB
         if (isset($this->select)) unset($this->select);
         if (isset($this->table)) unset($this->table);
         if (isset($this->where)) unset($this->where);
+        if (isset($this->noKey)) unset($this->noKey);
     }
 }
+

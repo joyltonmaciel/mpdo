@@ -6,7 +6,7 @@ use stdClass;
 
 /**
  * MDB.php
- * by Joylton Maciel at November 8th, 2020.
+ * by Joylton Maciel at February 8, 2020.
  * 
  * DabaBase connection and manipulation.
  * 
@@ -197,11 +197,26 @@ class MDB
             $args[0] = '*';
         }
 
-        foreach ($args as $content) {
-            if (isset($this->select)) {
-                $this->select .= ', ' . $content;
-            } else {
-                $this->select = $content;
+        foreach ($args as $conts) {
+
+            $opcs = explode(',', preg_replace('/\s+/', '', $conts));
+
+            foreach ($opcs as $content) {
+                if (isset($this->sum)) {
+
+                    // se o campo estiver em sum() nao sera
+                    // acrescentado no select.
+
+                    if (strpos($this->sum, $content) > 0) {
+                        continue;
+                    }
+                }
+
+                if (isset($this->select)) {
+                    $this->select .= ', ' . $content;
+                } else {
+                    $this->select = $content;
+                }
             }
         }
 
@@ -243,6 +258,7 @@ class MDB
      */
     public function where($field, $operator, $content = '')
     {
+
         if (is_bool($operator)) {
             if ($operator === true) {
                 $operator = 't';
@@ -290,14 +306,71 @@ class MDB
             }
         }
 
+        if (substr($field, 0, 9) == 'translate') {
+            $arrayfield = substr($field, 10);
+            $arrayfield = substr($arrayfield, 0, strpos($arrayfield, ','));
+        } else {
+            $arrayfield = $field;
+        }
+
         if (!isset($this->where)) {
             $this->where = ' where ';
         } else {
             $this->where .= ' and ';
         }
 
-        $this->params[str_replace('.', '__', $field)] = $content;
-        $this->where .= $field . ' ' . $operator . ' ' . ':' . str_replace('.', '__', $field);
+        /**
+         * O while a seguir eh importante para evitar campos com o mesmo 
+         * nome na pesquisa.
+         */
+        while (true) {
+            $arrayfield = sprintf("%s", chr(rand(97, 122))) . '_'
+                . str_replace('.', '__', $arrayfield);
+            if (!isset($this->params[$arrayfield])) {
+                $this->params[$arrayfield] = $content;
+                $this->where .= $field . ' ' . $operator . ' ' . ':' . $arrayfield;
+                break;
+            }
+        }
+
+        return $this;
+    }
+
+    public function sum($field, $nickname = null)
+    {
+        if (!isset($this->sum)) {
+            $this->sum = '';
+        }
+
+        $this->sum .= ', sum(' . $field . ')';
+
+        if (!is_null($nickname)) {
+            $this->sum .= ' as ' . $nickname;
+        }
+
+        if (isset($this->select)) {
+            $this->select = str_replace($field, '', $this->select);
+        }
+
+        return $this;
+    }
+
+    public function groupBy()
+    {
+        $args = func_get_args();
+
+        if (count($args) <= 0) {
+            $args[0] = '*';
+        }
+
+        foreach ($args as $content) {
+            if (isset($this->groupby)) {
+                $this->groupby .= ', ' . $content;
+            } else {
+                $this->groupby = ' group by ' . $content;
+            }
+        }
+
         return $this;
     }
 
@@ -364,6 +437,12 @@ class MDB
         return $this;
     }
 
+    /**
+     * Chave e regra ou valor da chave
+     *
+     * @param string $key
+     * @return this
+     */
     public function key($key)
     {
         if (strpos($key, ':') > 0) {
@@ -372,6 +451,19 @@ class MDB
             $this->key = $key;
             $this->rules = '';
         }
+
+        return $this;
+    }
+
+    /**
+     * gera um Html DataList com retorno do sql query.
+     * 
+     * @param array $htmldatalist
+     * @return this
+     */
+    public function htmldatalist($htmldatalist)
+    {
+        $this->htmldatalist = $htmldatalist;
         return $this;
     }
 
@@ -387,6 +479,9 @@ class MDB
         if (!isset($this->select)) $this->select();
         $sql .= $this->select;
 
+        // sum
+        if (isset($this->sum)) $sql .= $this->sum;
+
         // table name
         if (!isset($this->table)) throw new \Exception("SQL: Tabela indefinida.");
         $sql .= $this->table;
@@ -397,11 +492,18 @@ class MDB
         // condition
         if (isset($this->where)) $sql .= $this->where;
 
+        // group by
+        if (isset($this->groupby)) $sql .= $this->groupby;
+
         // order by
         if (isset($this->orderby)) $sql .= $this->orderby;
 
         // limit
         if ($limit > 0) $sql .= ' limit ' . $limit;
+
+        // SQL adjusts
+        $sql = str_replace(', ,', ',', $sql);
+        $sql = str_replace(',,', ',', $sql);
 
         // prepare and execute the statment
         $result = $this->connection->prepare($sql);
@@ -447,11 +549,57 @@ class MDB
 
     public function Result($result = '')
     {
+        // se nao houve retorno do banco, retorna falso
         if (!$result) {
             $this->cleanAll();
             return false;
         }
 
+        // para criar um datalist do resultado, o key() deve ser passado
+        if (isset($this->htmldatalist)) {
+            return $this->ResultHtmlDataList($result);
+        } else {
+            return $this->ResultFetchAll($result);
+        }
+    }
+
+    public function ResultHtmlDataList($result)
+    {
+        // retira mais de um espaco e joga o resultado em array
+        $flds = explode(',', preg_replace('/\s+/', '', $this->select));
+
+        // start datalist
+        $retorno = "<datalist id=\"" . $this->htmldatalist . "\">\n";
+
+        foreach ($result->fetchAll() as $pkey => $record) {
+
+            $retorno .= "\n<option value=\"";
+
+            $options = '';
+            foreach ($flds as $index => $field) {
+                if (!empty($options)) {
+                    $options .= ' | ';
+                }
+                $options .= $record[$field];
+            }
+
+            $retorno .= $options;
+            $retorno .= "\">";
+        }
+
+        $retorno .= "</datalist>\n";
+
+        $retorno .= "<input type=\"text\" "
+            . "name=\"" . $this->htmldatalist . "\" "
+            . "list=\"" . $this->htmldatalist . "\" "
+            . "class=\"form-control\" autocomplete=\"off\" "
+            . "placeholder=\"Digite " . $this->select . " para busca aqui ...\"> \n";
+
+        return $retorno;
+    }
+
+    public function ResultFetchAll($result)
+    {
         $count = 0;
         $eof = true;
         $fields = new stdClass();
@@ -496,13 +644,14 @@ class MDB
     {
         if (isset($this->debug)) {
             if ($this->debug) {
-                echo "<pre>";
+                echo "\nMPDO - Dababase Manipulation Class";
                 echo "\n<hr>";
-                echo "\nDb - Dababase Manipulation Class";
-                echo "\nSQL:";
                 echo "\n" . $sql;
+                echo "\n<hr>";
+                echo "<pre>";
                 echo "\nPARAMETERS:\n";
                 print_r($this->params);
+                echo "\n</pre>";
                 echo "\nMESSAGE:\n";
                 if (!$result) {
                     echo pg_last_error($this->connection);
@@ -510,7 +659,6 @@ class MDB
                     echo "OK";
                 }
                 echo "\n<hr>";
-                echo "\n</pre>";
             }
         }
     }
@@ -541,12 +689,15 @@ class MDB
     {
         if (isset($this->join)) unset($this->join);
         if (isset($this->key)) unset($this->key);
+        if (isset($this->groupby)) unset($this->groupby);
         if (isset($this->orderby)) unset($this->orderby);
+        if (isset($this->noKey)) unset($this->noKey);
+        if (isset($this->where)) unset($this->where);
         if (isset($this->params)) unset($this->params);
         if (isset($this->select)) unset($this->select);
+        if (isset($this->sum)) unset($this->sum);
         if (isset($this->table)) unset($this->table);
-        if (isset($this->where)) unset($this->where);
-        if (isset($this->noKey)) unset($this->noKey);
+        if (isset($this->htmldatalist)) unset($this->htmldatalist);
     }
 }
 

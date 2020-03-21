@@ -206,7 +206,8 @@ class MDB
 
         foreach ($args as $conts) {
 
-            $opcs = explode(',', preg_replace('/\s+/', '', $conts));
+            // $opcs = explode(',', preg_replace('/\s+/', '', $conts));
+            $opcs = explode(',', str_replace(', ', ',', $conts));
 
             foreach ($opcs as $content) {
                 if (isset($this->sum)) {
@@ -321,9 +322,9 @@ class MDB
         }
 
         if (!isset($this->where)) {
-            $this->where = ' where ';
+            $this->where = ' WHERE ';
         } else {
-            $this->where .= ' and ';
+            $this->where .= ' AND ';
         }
 
         /**
@@ -374,7 +375,7 @@ class MDB
             if (isset($this->groupby)) {
                 $this->groupby .= ', ' . $content;
             } else {
-                $this->groupby = ' group by ' . $content;
+                $this->groupby = ' GROUP BY ' . $content;
             }
         }
 
@@ -482,10 +483,12 @@ class MDB
         if (!isset($this->params)) $this->params = [];
 
         // command
-        $sql = 'select ';
+        $sql = 'SELECT ';
 
         // fields to return
-        if (!isset($this->select)) $this->select();
+        if (!isset($this->select)) {
+            $this->select();
+        }
         $sql .= $this->select;
 
         // sum
@@ -508,7 +511,7 @@ class MDB
         if (isset($this->orderby)) $sql .= $this->orderby;
 
         // limit
-        if ($limit > 0) $sql .= ' limit ' . $limit;
+        if ($limit > 0) $sql .= ' LIMIT ' . $limit;
 
         // SQL adjusts
         $sql = str_replace(', ,', ',', $sql);

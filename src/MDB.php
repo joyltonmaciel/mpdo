@@ -140,6 +140,13 @@ class MDB
         // print_r($this->params);
         // die;
 
+        // show the SQL command on screen
+        $this->showDebug($conn, $sql);
+        // $this->showDebug($result, $sql);
+
+        // limpa parametros da consulta anterior
+        $this->cleanAll();
+
         if ($conn->rowCount() > 0) {
             return $conn->rowCount();
         } else {
@@ -445,6 +452,8 @@ class MDB
      */
     public function key($key)
     {
+
+
         if (strpos($key, ':') > 0) {
             list($this->key, $this->rules) = explode(":", $key);
         } else {
@@ -523,13 +532,9 @@ class MDB
      */
     public function execute($sql)
     {
-        // run que query (command)
-        // $result = pg_query_params($this->connection, $sql);
-        $result = $this->connection->query($sql);
-
-        // show the SQL command on screen
+        $result = $this->connection->prepare($sql);
+        $result->execute();
         $this->showDebug($result, $sql);
-
         return $this->Result($result);
     }
 
@@ -569,6 +574,7 @@ class MDB
         $flds = explode(',', preg_replace('/\s+/', '', $this->select));
 
         // start datalist
+
         $retorno = "<datalist id=\"" . $this->htmldatalist . "\">\n";
 
         foreach ($result->fetchAll() as $pkey => $record) {
@@ -594,6 +600,9 @@ class MDB
             . "list=\"" . $this->htmldatalist . "\" "
             . "class=\"form-control\" autocomplete=\"off\" "
             . "placeholder=\"Digite " . $this->select . " para busca aqui ...\"> \n";
+
+        // limpa parametros da consulta anterior
+        $this->cleanAll();
 
         return $retorno;
     }
@@ -625,7 +634,8 @@ class MDB
             $count++;
         }
 
-        $this->cleanAll();
+        $this->cleanAll(); // limpa parametros da consulta anterior
+
         $eof = $count > 0 ? false : true;
         return json_decode(json_encode([
             'count' => $count,

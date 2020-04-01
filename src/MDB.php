@@ -429,13 +429,18 @@ class MDB
         return $this;
     }
 
-    public function orderBy($orderby)
+    public function orderBy($orderby, $desc = '')
     {
         if (!isset($this->orderby)) {
             $this->orderby = ' order by ' . $orderby;
         } else {
             $this->orderby .= ', ' . $orderby;
         }
+
+        if ($desc == 'desc') {
+            $this->orderby .= ' ' . $desc;
+        }
+
         return $this;
     }
 

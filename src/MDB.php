@@ -3,37 +3,69 @@
 namespace Mpdo;
 
 use stdClass;
+use Mpdo\DotEnv;
+use Mpdo\Strings;
 
 /**
  * MDB.php
  * by Joylton Maciel at February 8, 2020.
  * 
- * DabaBase connection and manipulation.
- * 
+ * MPDO - My PDO
+ * DabaBase Connection and Manipulation
  */
 
 class MDB
 {
     protected $env;
 
-    public function __construct($dbname)
+    /**
+     * Open database
+     *
+     * @param string $dbname. Must exists a database name.
+     * @param boolean $debug, when true will show the sql query command.
+     * @param boolean $debug
+     */
+    public function __construct($dbname, $debug = false)
     {
+
         if (empty($dbname)) {
             throw new \Exception("Informe o nome do banco de Dados.");
         }
 
-        $env = self::getDotEnvData();
         try {
+
+            /**
+             * Set the environment parameters
+             */
+            $env = DotEnv::getDotEnvData();
+
+            /**
+             * set the Connection data
+             */
             $conn = $env->DB_DRIVER
                 . ":host=" . $env->DB_HOST
                 . ";dbname=" . $dbname;
+
+            /**
+             * Connect to the database
+             */
             $this->connection = new \PDO(
                 $conn,
                 $env->DB_USER,
                 $env->DB_PASS
             );
+
+            /**
+             * Set PDO attributs to the connection
+             */
+            // $this->connectin->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
+        }
+
+        if ($debug) {
+            $this->debug = true;
         }
     }
 
@@ -68,35 +100,12 @@ class MDB
                 // $idList[] = $this->connection->lastInsertId('stocks_id_seq');
             }
 
-            // Registra o acontecimento na auditoria
-            // if (empty($auditoria)) {
-            //     $auditoria = "Novo registro.";
-            // }
-            // if (empty($formulario)) {
-            //     $formulario = $_SESSION['PARAMETERS']->form->viewtitle;
-            // }
-
-            // Auditoria::save($this->connection, $auditoria, $formulario);
-
             $this->connection->commit();
             // return $idList;
         } catch (\Exception $e) {
             $this->pdo->rollBack();
             throw new \Exception("Gravar: " . $e->getMessage());
         }
-        // try {
-        //     $PDO_db = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=UTF-8', DB_USER, DB_PWD);
-        //     $PDO_db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        //     $sth = $PDO_db->prepare($insert);
-        //     echo 'Insert prepared<br/>';
-        //     $arrPar = array(':nome' =>  $nome); //shouldn't this be :name?
-        //     $r = $sth->execute($arrPar);
-        //     echo 'Insert executed<br/>';
-        //     var_dump($r);
-        // } catch (PDOException $pdoE) {
-        //     echo $pdoE->getMessage() . '<br/>';
-        //     var_dump($pdoE);
-        // }
     }
 
     public function update($dados, $auditoria = '', $formulario = '')
@@ -133,16 +142,8 @@ class MDB
         $conn = $this->connection->prepare($sql);
         $conn->execute($this->params);
 
-        // echo "<pre>";
-        // echo "SQL: $sql \n";
-        // echo "WHERE: " . $this->where . "\n";
-        // print_r($dados);
-        // print_r($this->params);
-        // die;
-
         // show the SQL command on screen
         $this->showDebug($conn, $sql);
-        // $this->showDebug($result, $sql);
 
         // limpa parametros da consulta anterior
         $this->cleanAll();
@@ -152,18 +153,6 @@ class MDB
         } else {
             throw new \Exception("Erro ao alterar registro.");
         }
-
-        // show the SQL command on screen
-        // $this->showDebug($result);
-
-        // Registra o acontecimento na // Auditoria
-        // if (empty($auditoria)) {
-        //     $auditoria = "Registro alterado.";
-        // }
-        // if (empty($formulario)) {
-        //     $formulario = $_SESSION['PARAMETERS']->form->viewtitle;
-        // }
-        // Auditoria::save($this->connection, $auditoria, $formulario);
     }
 
     public function delete()
@@ -185,15 +174,6 @@ class MDB
         if ($conn->rowCount() <= 0) {
             throw new \Exception("Erro ao excluir registro.");
         }
-
-        // Registra o acontecimento na auditoria
-        // if (empty($auditoria)) {
-        //     $auditoria = "Registro excluido.";
-        // }
-        // if (empty($formulario)) {
-        //     $formulario = $_SESSION['PARAMETERS']->form->viewtitle;
-        // }
-        // Auditoria::save($this->connection, $auditoria, $formulario);
     }
 
     public function select()
@@ -247,7 +227,17 @@ class MDB
         return $this;
     }
 
-    // ->join('unidades', 'unidades_config.unidadeid', '=', 'unidades.unidadeid')
+    /**
+     * Join tables
+     * usage: ->join(<table_to_join>, <table_origem.primary_key>, '=', <table_to_join.primary_key>)
+     * example: ->join('unidades', 'unidades_config.unidadeid', '=', 'unidades.unidadeid')
+     *
+     * @param string $table
+     * @param string $afield
+     * @param string $operator
+     * @param string $bfield
+     * @return void
+     */
     public function join($table, $afield, $operator, $bfield)
     {
         if (!isset($this->join)) {
@@ -458,8 +448,6 @@ class MDB
      */
     public function key($key)
     {
-
-
         if (strpos($key, ':') > 0) {
             list($this->key, $this->rules) = explode(":", $key);
         } else {
@@ -630,7 +618,7 @@ class MDB
                         $fields->{trim($record[$this->key])} = json_decode(json_encode($record));
                     } else {
                         if ($this->rules == 'onlynumbers') {
-                            $fields->{self::onlyNumbers(trim($record[$this->key]))} = json_decode(json_encode($record));
+                            $fields->{Strings::onlyNumbers(trim($record[$this->key]))} = json_decode(json_encode($record));
                         } else {
                             $fields->{trim($record[$this->key])} = json_decode(json_encode($record));
                         }
@@ -681,28 +669,6 @@ class MDB
         }
     }
 
-    /**
-     * Remove all non numeric characters from string
-     * @param string $string
-     * @return string
-     */
-    public static function onlyNumbers($string)
-    {
-        return preg_replace("/[^0-9]/", "", $string);
-    }
-
-    /**
-     * Get .env settings
-     */
-    public static function getDotEnvData()
-    {
-        $file = __DIR__ . '/../../../../.env';
-        if (file_exists($file)) {
-            return json_decode(json_encode(parse_ini_file($file)));
-        }
-        throw new \Exception("No Database settings.");
-    }
-
     public function cleanAll()
     {
         if (isset($this->join)) unset($this->join);
@@ -718,4 +684,3 @@ class MDB
         if (isset($this->htmldatalist)) unset($this->htmldatalist);
     }
 }
-

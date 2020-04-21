@@ -253,10 +253,26 @@ class MDB
      * ->where('nome', 'Maria') ... nome='Maria'
      * ->where('graduated', true) ... graduated='t'
      * ->where('date', '>=', '2020-01-09') ... date>='2020-01-09'
+     * ->where('nome=Ana Vitoria')
      */
-    public function where($field, $operator, $content = '')
+    public function where($field, $operator = '', $content = '')
     {
+        /**
+         * Separa a string field quando o campo, o operador e a content
+         * estao juntos no parametro field.
+         */
+        if (!empty($field) && empty($operator) && empty($content)) {
+            if (strpos($field, '=') > 0) {
+                list($field, $content) = explode('=', $field);
+                $operator = '=';
+            } else {
+                throw new \Exception("Parâmetros passados para método where estão incompletos.");
+            }
+        }
 
+        /**
+         * Corrige os campos boolean para string 't' ou 'f'
+         */
         if (is_bool($operator)) {
             if ($operator === true) {
                 $operator = 't';
@@ -272,6 +288,10 @@ class MDB
                 $content = 'f';
             }
         }
+
+        /**
+         * corrige os campos inteiros, flutuantes ou numericos para string
+         */
 
         if (
             is_int($operator) ||
@@ -289,6 +309,9 @@ class MDB
             $content = strval($content);
         }
 
+        /**
+         * Corrige o operador
+         */
         if (
             is_string($operator) &&
             is_string($content)
@@ -304,6 +327,9 @@ class MDB
             }
         }
 
+        /**
+         * Aplica parametros para Postgres
+         */
         if (substr($field, 0, 9) == 'translate') {
             $arrayfield = substr($field, 10);
             $arrayfield = substr($arrayfield, 0, strpos($arrayfield, ','));
@@ -311,6 +337,9 @@ class MDB
             $arrayfield = $field;
         }
 
+        /**
+         * Monta o comando SQL
+         */
         if (!isset($this->where)) {
             $this->where = ' WHERE ';
         } else {

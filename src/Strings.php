@@ -6,6 +6,7 @@ class Strings
 {
     /**
      * Remove all non numeric characters from string
+     * @author     Roberto L. Machado <linux dot rlm at gmail dot com>
      * @param string $string
      * @return string
      */

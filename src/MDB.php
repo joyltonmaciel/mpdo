@@ -7,8 +7,8 @@ use Mpdo\DotEnv;
 use Mpdo\Strings;
 
 /**
- * MDB.php
- * by Joylton Maciel at February 8, 2020.
+ * MDB.php - at February 8, 2020.
+ * @author Joylton Maciel <maciel dot inbox at gmail dot com>
  * 
  * MPDO - My PDO
  * DabaBase Connection and Manipulation

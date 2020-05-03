@@ -38,7 +38,12 @@ class MDB
              * Set the environment parameters
              */
             $env = DotEnv::getDotEnvData();
-
+            
+            /**
+             * Set the dbname
+             */
+            $dbname = self::setDbname($dbname, $env);
+            
             /**
              * set the Connection data
              */
@@ -265,6 +270,18 @@ class MDB
             if (strpos($field, '=') > 0) {
                 list($field, $content) = explode('=', $field);
                 $operator = '=';
+            } elseif (strpos($field, '>') > 0) {
+                list($field, $content) = explode('>', $field);
+                $operator = '>';
+            } elseif (strpos($field, '<') > 0) {
+                list($field, $content) = explode('<', $field);
+                $operator = '<';
+            } elseif (strpos($field, '>=') > 0) {
+                list($field, $content) = explode('>=', $field);
+                $operator = '>=';
+            } elseif (strpos($field, '<=') > 0) {
+                list($field, $content) = explode('<=', $field);
+                $operator = '<=';
             } else {
                 throw new \Exception("Parâmetros passados para método where estão incompletos.");
             }
@@ -685,7 +702,13 @@ class MDB
                 echo "\n<hr>";
                 echo "<pre>";
                 echo "\nPARAMETERS:\n";
-                print_r($this->params);
+
+                if (isset($this->params)) {
+                    print_r($this->params);
+                } else {
+                    echo "No parameters set.";
+                }
+
                 echo "\n</pre>";
                 echo "\nMESSAGE:\n";
                 if (!$result) {
@@ -712,4 +735,21 @@ class MDB
         if (isset($this->table)) unset($this->table);
         if (isset($this->htmldatalist)) unset($this->htmldatalist);
     }
+    
+    private static function setDbname($dbname, $env)
+    {
+    
+        if ($dbname=='admin') {
+            return $env->DB_ADMIN;
+        }
+        
+        if ($dbname=='parameters' || 
+            $dbname=='parameter' || 
+            $dbname=='param') {
+            return $env->DB_PARAM;
+        }
+        
+        return $dbname; 
+    }
 }
+

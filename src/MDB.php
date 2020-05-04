@@ -38,12 +38,12 @@ class MDB
              * Set the environment parameters
              */
             $env = DotEnv::getDotEnvData();
-            
+
             /**
              * Set the dbname
              */
             $dbname = self::setDbname($dbname, $env);
-            
+
             /**
              * set the Connection data
              */
@@ -263,31 +263,6 @@ class MDB
     public function where($field, $operator = '', $content = '')
     {
         /**
-         * Separa a string field quando o campo, o operador e a content
-         * estao juntos no parametro field.
-         */
-        if (!empty($field) && empty($operator) && empty($content)) {
-            if (strpos($field, '=') > 0) {
-                list($field, $content) = explode('=', $field);
-                $operator = '=';
-            } elseif (strpos($field, '>') > 0) {
-                list($field, $content) = explode('>', $field);
-                $operator = '>';
-            } elseif (strpos($field, '<') > 0) {
-                list($field, $content) = explode('<', $field);
-                $operator = '<';
-            } elseif (strpos($field, '>=') > 0) {
-                list($field, $content) = explode('>=', $field);
-                $operator = '>=';
-            } elseif (strpos($field, '<=') > 0) {
-                list($field, $content) = explode('<=', $field);
-                $operator = '<=';
-            } else {
-                throw new \Exception("Parâmetros passados para método where estão incompletos.");
-            }
-        }
-
-        /**
          * Corrige os campos boolean para string 't' ou 'f'
          */
         if (is_bool($operator)) {
@@ -324,6 +299,35 @@ class MDB
             is_numeric($operator)
         ) {
             $content = strval($content);
+        }
+
+        /**
+         * Separa a string field quando o campo, o operador e a content
+         * estao juntos no parametro field.
+         */
+        if (
+            !empty($field) &&
+            strlen($operator) <= 0 &&
+            strlen($content) <= 0
+        ) {
+            if (strpos($field, '=') > 0) {
+                list($field, $content) = explode('=', $field);
+                $operator = '=';
+            } elseif (strpos($field, '>') > 0) {
+                list($field, $content) = explode('>', $field);
+                $operator = '>';
+            } elseif (strpos($field, '<') > 0) {
+                list($field, $content) = explode('<', $field);
+                $operator = '<';
+            } elseif (strpos($field, '>=') > 0) {
+                list($field, $content) = explode('>=', $field);
+                $operator = '>=';
+            } elseif (strpos($field, '<=') > 0) {
+                list($field, $content) = explode('<=', $field);
+                $operator = '<=';
+            } else {
+                throw new \Exception("Parâmetros passados para método where estão incompletos.");
+            }
         }
 
         /**
@@ -735,21 +739,23 @@ class MDB
         if (isset($this->table)) unset($this->table);
         if (isset($this->htmldatalist)) unset($this->htmldatalist);
     }
-    
+
     private static function setDbname($dbname, $env)
     {
-    
-        if ($dbname=='admin') {
+
+        if ($dbname == 'admin') {
             return $env->DB_ADMIN;
         }
-        
-        if ($dbname=='parameters' || 
-            $dbname=='parameter' || 
-            $dbname=='param') {
+
+        if (
+            $dbname == 'parameters' ||
+            $dbname == 'parameter' ||
+            $dbname == 'param'
+        ) {
             return $env->DB_PARAM;
         }
-        
-        return $dbname; 
+
+        return $dbname;
     }
 }
 

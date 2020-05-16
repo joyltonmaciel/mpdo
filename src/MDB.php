@@ -620,7 +620,6 @@ class MDB
         $flds = explode(',', preg_replace('/\s+/', '', $this->select));
 
         // start datalist
-
         $retorno = "<datalist id=\"" . $this->htmldatalist . "\">\n";
 
         foreach ($result->fetchAll() as $pkey => $record) {

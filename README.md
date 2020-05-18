@@ -2,13 +2,13 @@
 
 Database Manipulation which looks like Laravel Eloquent syntax.
 
-**Install:**
+### Install
 
 composer require joyltonmaciel/mpdo:dev-master
 
-**Usage:**
+### Usage
 
-_Join_
+##### Join
 
 ```
     $db->table('tableA')
@@ -20,7 +20,7 @@ _Join_
         ->join('tableB as B', 'B.compid', '=', 'A.compid')
 ```
 
-_Where_
+##### Where
 
 ```
     $db->table('folhas')
@@ -29,7 +29,7 @@ _Where_
         ->get();
 ```
 
-_get_
+##### get
 
 The get method get records from table. The parameter of get method limit the amount of records returned.
 
@@ -50,7 +50,7 @@ Return only 3 records:
         ->get(3);
 ```
 
-_insert_
+##### insert
 
 ```
     $dados = new stdClass();
@@ -61,13 +61,13 @@ _insert_
     $db->insert($dados);
 ```
 
-_update_
+##### update
 
 ```
     $db->table('tabela')->where('id', $id)->update(['field_name' => $value]);
 ```
 
-_delete_
+##### delete
 
 ```
     $db->table('table')->where('id', $id)->delete();

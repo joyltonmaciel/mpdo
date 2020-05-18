@@ -49,3 +49,26 @@ Return only 3 records:
         ->orderBy('folhaid', 'desc')
         ->get(3);
 ```
+
+_insert_
+
+```
+    $dados = new stdClass();
+    $dados->{'tabela'} = new stdClass();
+    $dados->{'tabela'}->nome = 'Joao';
+    $dados->{'tabela'}->date = '2020-01-01';
+    $dados->{'tabela'}->valid = true;
+    $db->insert($dados);
+```
+
+_update_
+
+```
+    $db->table('tabela')->where('id', $id)->update(['field_name' => $value]);
+```
+
+_delete_
+
+```
+    $db->table('table')->where('id', $id)->delete();
+```

@@ -63,7 +63,7 @@ class MDB
             /**
              * Set PDO attributs to the connection
              */
-            // $this->connectin->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
@@ -109,7 +109,7 @@ class MDB
             // return $idList;
         } catch (\Exception $e) {
             $this->pdo->rollBack();
-            throw new \Exception("Gravar: " . $e->getMessage());
+            throw new \Exception("Insert: " . $e->getMessage());
         }
     }
 
@@ -757,4 +757,3 @@ class MDB
         return $dbname;
     }
 }
-

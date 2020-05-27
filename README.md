@@ -4,80 +4,106 @@ Database Manipulation which looks like Laravel Eloquent syntax.
 
 ### Install
 
+```
 composer require joyltonmaciel/mpdo:dev-master
+```
 
 ### Usage
 
-##### Join
+**Connect to Database**
 
 ```
-    $db->table('tableA')
-        ->join('tableB', 'tableB.id', '=', 'tableA.compid')
+require_once __DIR__ . '/../vendor/autoload.php';
+use Mpdo\MDB;
+$db = new MDB($dbname);
+```
+
+**Join**
+
+```
+$db->table('tableA')
+    ->join('tableB', 'tableB.id', '=', 'tableA.compid')
 ```
 
 ```
-    $db->table('tableA as A')
-        ->join('tableB as B', 'B.compid', '=', 'A.compid')
+$db->table('tableA as A')
+    ->join('tableB as B', 'B.compid', '=', 'A.compid')
 ```
 
-##### Where
+**Where**
 
 ```
-    $db->table('folhas')
-        ->where('tpfolha', 0)
-        ->where('folhaid', '<=', $folhaid)
-        ->get();
+$db->table('folhas')
+    ->where('tpfolha', 0)
+    ->where('folhaid', '<=', $folhaid)
+    ->get();
 ```
 
-##### whereRaw
+**whereRaw**
 
 ```
-    $db->table('tableA')
-        ->where("select * from tableA where id=25 and name='John'")
-        ->get();
+$db->table('tableA')
+    ->whereRaw("select * from tableA where id=25 and name='John'")
+    ->get();
 ```
 
+**orWhere**
 
-##### get
+```
+$db->table('tableA')
+    ->where('id', 50)
+    ->orWhere('id', 34)
+    ->get();
+```
+
+**orWhereRaw**
+
+```
+$db->table('tableA')
+    ->orWhereRaw("select * from tableA where id=25 and name='John'")
+    ->get();
+```
+
+**get**
 
 The get method get records from table. The parameter of get method limit the amount of records returned.
 
-Return all records (no parameter is passed):
+_Return all records (no parameter is passed):_
 
 ```
-    $db->table('folhas')
-        ->orderBy('folhaid', 'desc')
-        ->get();
+$db->table('folhas')
+    ->orderBy('folhaid', 'desc')
+    ->get();
 ```
 
 
-Return only 3 records:
+_Return only 3 records:_
 
 ```
-    $db->table('folhas')
-        ->orderBy('folhaid', 'desc')
-        ->get(3);
+$db->table('TableA')
+    ->orderBy('id', 'desc')
+    ->get(3);
 ```
 
-##### insert
+**insert**
 
 ```
-    $dados = new stdClass();
-    $dados->{'tabela'} = new stdClass();
-    $dados->{'tabela'}->nome = 'Joao';
-    $dados->{'tabela'}->date = '2020-01-01';
-    $dados->{'tabela'}->valid = true;
-    $db->insert($dados);
+$dados = new stdClass();
+$dados->{'tabela'} = new stdClass();
+$dados->{'tabela'}->nome = 'Joao';
+$dados->{'tabela'}->date = '2020-01-01';
+$dados->{'tabela'}->valid = true;
+$db->insert($dados);
 ```
 
-##### update
+**update**
 
 ```
-    $db->table('tabela')->where('id', $id)->update(['field_name' => $value]);
+$db->table('tabela')->where('id', $id)->update(['field_name' => $value]);
 ```
 
-##### delete
+**delete**
 
 ```
-    $db->table('table')->where('id', $id)->delete();
+$db->table('table')->where('id', $id)->delete();
 ```

@@ -29,6 +29,15 @@ composer require joyltonmaciel/mpdo:dev-master
         ->get();
 ```
 
+##### whereRaw
+
+```
+    $db->table('tableA')
+        ->where("select * from tableA where id=25 and name='John'")
+        ->get();
+```
+
+
 ##### get
 
 The get method get records from table. The parameter of get method limit the amount of records returned.

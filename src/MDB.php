@@ -5,6 +5,7 @@ namespace Mpdo;
 use stdClass;
 use Mpdo\DotEnv;
 use Mpdo\Strings;
+use Sdr\common\Maintenance;
 
 /**
  * MDB.php - at February 8, 2020.
@@ -63,7 +64,7 @@ class MDB
             /**
              * Set PDO attributs to the connection
              */
-            $this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+            // $this->connectin->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
@@ -109,7 +110,7 @@ class MDB
             // return $idList;
         } catch (\Exception $e) {
             $this->pdo->rollBack();
-            throw new \Exception("Insert: " . $e->getMessage());
+            throw new \Exception("Gravar: " . $e->getMessage());
         }
     }
 
@@ -254,57 +255,37 @@ class MDB
     }
 
     /**
-     * usage:
-     * ->where('nome', 'Maria') ... nome='Maria'
-     * ->where('graduated', true) ... graduated='t'
-     * ->where('date', '>=', '2020-01-09') ... date>='2020-01-09'
-     * ->where('nome=Ana Vitoria')
+     * Set true or false as string: 't' or 'f'
      */
-    public function where($field, $operator = '', $content = '')
+    private function setTrueFalse($value)
     {
-        /**
-         * Corrige os campos boolean para string 't' ou 'f'
-         */
-        if (is_bool($operator)) {
-            if ($operator === true) {
-                $operator = 't';
-            } elseif ($operator === false) {
-                $operator = 'f';
+        if (is_bool($value)) {
+            if ($value === true) {
+                $value = 't';
+            } elseif ($value === false) {
+                $value = 'f';
             }
         }
+        return $value;
+    }
 
-        if (is_bool($content)) {
-            if ($content === true) {
-                $content = 't';
-            } elseif ($content === false) {
-                $content = 'f';
-            }
-        }
-
-        /**
-         * corrige os campos inteiros, flutuantes ou numericos para string
-         */
-
+    /**
+     * Integer, Float, Numeric are changed to string
+     */
+    private function setIntFloatNumeric($value)
+    {
         if (
-            is_int($operator) ||
-            is_float($operator) ||
-            is_numeric($operator)
+            is_int($value) ||
+            is_float($value) ||
+            is_numeric($value)
         ) {
-            $operator = strval($operator);
+            $value = strval($value);
         }
+        return $value;
+    }
 
-        if (
-            is_int($content) ||
-            is_float($content) ||
-            is_numeric($operator)
-        ) {
-            $content = strval($content);
-        }
-
-        /**
-         * Separa a string field quando o campo, o operador e a content
-         * estao juntos no parametro field.
-         */
+    private function setFillOperatorAndContent($field, $operator, $content)
+    {
         if (
             !empty($field) &&
             strlen($operator) <= 0 &&
@@ -329,6 +310,43 @@ class MDB
                 throw new \Exception("Parâmetros passados para método where estão incompletos.");
             }
         }
+
+        return json_decode(json_encode([
+            'field' => $field,
+            'operator' => $operator,
+            'content' => $content
+        ]));
+    }
+
+    /**
+     * usage:
+     * ->where('nome', 'Maria') ... nome='Maria'
+     * ->where('graduated', true) ... graduated='t'
+     * ->where('date', '>=', '2020-01-09') ... date>='2020-01-09'
+     * ->where('nome=Ana Vitoria')
+     */
+    public function where($field, $operator = '', $content = '')
+    {
+        /**
+         * Corrige os campos boolean para string 't' ou 'f'
+         */
+        $operator = $this->setTrueFalse($operator);
+        $content = $this->setTrueFalse($content);
+
+        /**
+         * corrige os campos inteiros, flutuantes ou numericos para string
+         */
+        $operator = $this->setIntFloatNumeric($operator);
+        $content = $this->setIntFloatNumeric($content);
+
+        /**
+         * Separa a string field quando o campo, o operador e a content
+         * estao juntos no parametro field.
+         */
+        $separatestring = $this->setFillOperatorAndContent($field, $operator, $content);
+        $field = $separatestring->field;
+        $operator = $separatestring->operator;
+        $content = $separatestring->content;
 
         /**
          * Corrige o operador
@@ -372,8 +390,10 @@ class MDB
          * nome na pesquisa.
          */
         while (true) {
+
             $arrayfield = sprintf("%s", chr(rand(97, 122))) . '_'
                 . str_replace('.', '__', $arrayfield);
+
             if (!isset($this->params[$arrayfield])) {
                 $this->params[$arrayfield] = $content;
                 $this->where .= $field . ' ' . $operator . ' ' . ':' . $arrayfield;
@@ -381,6 +401,26 @@ class MDB
             }
         }
 
+        return $this;
+    }
+
+    public function orWhereRaw($orWhereRaw)
+    {
+        if (!isset($this->orWhereRaw)) {
+            $this->orWhereRaw = $orWhereRaw;
+        } else {
+            $this->orWhereRaw .= ' OR ' . $orWhereRaw;
+        }
+        return $this;
+    }
+
+    public function whereRaw($whereRaw)
+    {
+        if (!isset($this->whereRaw)) {
+            $this->whereRaw = $whereRaw;
+        } else {
+            $this->whereRaw .= ' AND ' . $whereRaw;
+        }
         return $this;
     }
 
@@ -424,21 +464,8 @@ class MDB
 
     public function orWhere($field, $operator, $content)
     {
-        if (is_bool($operator)) {
-            if ($operator === true) {
-                $operator = 't';
-            } elseif ($operator === false) {
-                $operator = 'f';
-            }
-        }
-
-        if (is_bool($content)) {
-            if ($content === true) {
-                $content = 't';
-            } elseif ($content === false) {
-                $content = 'f';
-            }
-        }
+        $operator = $this->setTrueFalse($operator);
+        $content = $this->setTrueFalse($content);
 
         if (is_int($operator) || is_float($operator)) {
             $operator = strval($operator);
@@ -547,6 +574,24 @@ class MDB
         // condition
         if (isset($this->where)) $sql .= $this->where;
 
+        // condition : extra
+        if (isset($this->whereRaw)) {
+            if (!isset($this->where)) {
+                $sql .= ' WHERE ' . $this->whereRaw;
+            } else {
+                $sql .= ' AND ' . $this->whereRaw;
+            }
+        }
+
+        // condition : or where
+        if (isset($this->orWhereRaw)) {
+            if (!isset($this->where)) {
+                $sql .= ' WHERE ' . $this->orWhereRaw;
+            } else {
+                $sql .= ' OR ' . $this->orWhereRaw;
+            }
+        }
+
         // group by
         if (isset($this->groupby)) $sql .= $this->groupby;
 
@@ -620,6 +665,7 @@ class MDB
         $flds = explode(',', preg_replace('/\s+/', '', $this->select));
 
         // start datalist
+
         $retorno = "<datalist id=\"" . $this->htmldatalist . "\">\n";
 
         foreach ($result->fetchAll() as $pkey => $record) {
@@ -732,6 +778,9 @@ class MDB
         if (isset($this->orderby)) unset($this->orderby);
         if (isset($this->noKey)) unset($this->noKey);
         if (isset($this->where)) unset($this->where);
+        if (isset($this->whereRaw)) unset($this->whereRaw);
+        if (isset($this->orWhere)) unset($this->orWhere);
+        if (isset($this->orWhereRaw)) unset($this->orWhereRaw);
         if (isset($this->params)) unset($this->params);
         if (isset($this->select)) unset($this->select);
         if (isset($this->sum)) unset($this->sum);
@@ -757,3 +806,4 @@ class MDB
         return $dbname;
     }
 }
+

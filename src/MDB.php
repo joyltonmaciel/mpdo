@@ -5,7 +5,6 @@ namespace Mpdo;
 use stdClass;
 use Mpdo\DotEnv;
 use Mpdo\Strings;
-use Sdr\common\Maintenance;
 
 /**
  * MDB.php - at February 8, 2020.
@@ -36,7 +35,8 @@ class MDB
         try {
 
             /**
-             * Set the environment parameters
+             * Get the environment parameters.
+             * Return an Exception if no .env file.
              */
             $env = DotEnv::getDotEnvData();
 
@@ -64,8 +64,7 @@ class MDB
             /**
              * Set PDO attributs to the connection
              */
-            // $this->connectin->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
+            $this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
@@ -116,11 +115,16 @@ class MDB
 
     public function update($dados, $auditoria = '', $formulario = '')
     {
-        // command
+        // set variables used in this method and start the sql command
         $sql = 'UPDATE ';
+        $update = '';
 
-        // table name
-        if (!isset($this->table)) throw new \Exception("SQL: Tabela indefinida.");
+        // generate an Exception if the name of the table is nos passed.
+        if (!isset($this->table)) {
+            throw new \Exception("SQL: Tabela indefinida.");
+        }
+
+        // set table name
         $sql .= str_replace(' FROM ', '', $this->table);
 
         // command
@@ -128,7 +132,7 @@ class MDB
 
         // monta 
         foreach ($dados as $campo => $content) {
-            if (!isset($update)) {
+            if (empty($update)) {
                 $update = $campo . " = :" . $campo;
             } else {
                 $update .= ", " . $campo . " = :" . $campo;
@@ -806,4 +810,3 @@ class MDB
         return $dbname;
     }
 }
-

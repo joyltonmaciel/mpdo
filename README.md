@@ -8,6 +8,17 @@ Database Manipulation which looks like Laravel Eloquent syntax.
 composer require joyltonmaciel/mpdo:dev-master
 ```
 
+### The dotEnv Settings
+
+In the _root_ of the project create a file call _.env_ with the follow contents:
+
+```
+DB_DRIVER=[pgsql]
+DB_HOST=[localhost] 
+DB_USER=[data_base_user_name]
+DB_PASS=[data_base_user_name_password]  
+```
+
 ### Usage
 
 **Connect to Database**

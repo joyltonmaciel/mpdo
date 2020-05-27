@@ -5,8 +5,8 @@ namespace Mpdo;
 class DotEnv
 {
     /**
-     * Get the contents of the .env file
-     * @return string
+     * Load the contents of the .env file.
+     * @return stdClass
      */
     public static function getDotEnvData()
     {

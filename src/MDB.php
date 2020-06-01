@@ -108,7 +108,7 @@ class MDB
             $this->connection->commit();
             // return $idList;
         } catch (\Exception $e) {
-            $this->pdo->rollBack();
+            $this->connection->rollBack();
             throw new \Exception("Gravar: " . $e->getMessage());
         }
     }

@@ -10,7 +10,7 @@ composer require joyltonmaciel/mpdo:dev-master
 
 ### The dotEnv Settings
 
-In the _root_ of the project create a file call _.env_ with the follow contents:
+At the root of the project, create a file called _.env_ with the following content:
 
 ```
 DB_DRIVER=[pgsql]

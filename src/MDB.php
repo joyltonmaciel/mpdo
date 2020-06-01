@@ -168,7 +168,7 @@ class MDB
     public function delete()
     {
         // command
-        $sql = 'DELETE';
+        $sql = 'DELETE ';
 
         // table name
         if (!isset($this->table)) throw new \Exception("SQL: Tabela indefinida.");
@@ -180,6 +180,12 @@ class MDB
         // prepare and execute the statment
         $conn = $this->connection->prepare($sql);
         $conn->execute($this->params);
+
+        // show the SQL command on screen
+        $this->showDebug($conn, $sql);
+
+        // limpa parametros da consulta anterior
+        $this->cleanAll();
 
         if ($conn->rowCount() <= 0) {
             throw new \Exception("Erro ao excluir registro.");

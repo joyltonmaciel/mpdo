@@ -106,9 +106,16 @@ class MDB
             }
 
             $this->connection->commit();
+            
+            // limpa parametros da consulta anterior
+            $this->cleanAll();
+
             // return $idList;
+            // 
+            
         } catch (\Exception $e) {
             $this->connection->rollBack();
+            $this->cleanAll();
             throw new \Exception("Gravar: " . $e->getMessage());
         }
     }
@@ -462,10 +469,10 @@ class MDB
         }
 
         foreach ($args as $content) {
-            if (isset($this->groupby)) {
-                $this->groupby .= ', ' . $content;
+            if (isset($this->groupBy)) {
+                $this->groupBy .= ', ' . $content;
             } else {
-                $this->groupby = ' GROUP BY ' . $content;
+                $this->groupBy = ' GROUP BY ' . $content;
             }
         }
 
@@ -506,16 +513,16 @@ class MDB
         return $this;
     }
 
-    public function orderBy($orderby, $desc = '')
+    public function orderBy($orderBy, $desc = '')
     {
-        if (!isset($this->orderby)) {
-            $this->orderby = ' order by ' . $orderby;
+        if (!isset($this->orderBy)) {
+            $this->orderBy = ' order by ' . $orderBy;
         } else {
-            $this->orderby .= ', ' . $orderby;
+            $this->orderBy .= ', ' . $orderBy;
         }
 
         if ($desc == 'desc') {
-            $this->orderby .= ' ' . $desc;
+            $this->orderBy .= ' ' . $desc;
         }
 
         return $this;
@@ -603,10 +610,10 @@ class MDB
         }
 
         // group by
-        if (isset($this->groupby)) $sql .= $this->groupby;
+        if (isset($this->groupBy)) $sql .= $this->groupBy;
 
         // order by
-        if (isset($this->orderby)) $sql .= $this->orderby;
+        if (isset($this->orderBy)) $sql .= $this->orderBy;
 
         // limit
         if ($limit > 0) $sql .= ' LIMIT ' . $limit;
@@ -735,7 +742,8 @@ class MDB
             $count++;
         }
 
-        $this->cleanAll(); // limpa parametros da consulta anterior
+        // limpa parametros da consulta anterior
+        $this->cleanAll(); 
 
         $eof = $count > 0 ? false : true;
         return json_decode(json_encode([
@@ -784,8 +792,8 @@ class MDB
     {
         if (isset($this->join)) unset($this->join);
         if (isset($this->key)) unset($this->key);
-        if (isset($this->groupby)) unset($this->groupby);
-        if (isset($this->orderby)) unset($this->orderby);
+        if (isset($this->groupBy)) unset($this->groupBy);
+        if (isset($this->orderBy)) unset($this->orderBy);
         if (isset($this->noKey)) unset($this->noKey);
         if (isset($this->where)) unset($this->where);
         if (isset($this->whereRaw)) unset($this->whereRaw);

@@ -2,6 +2,11 @@
 
 Database Manipulation which looks like Laravel Eloquent syntax.
 
+# New features
+
+Modifications
+Accessors & Mutators
+
 ### Install
 
 ```

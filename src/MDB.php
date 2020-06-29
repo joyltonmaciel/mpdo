@@ -2,14 +2,15 @@
 
 namespace Mpdo;
 
-use stdClass;
 use Mpdo\DotEnv;
 use Mpdo\Strings;
+use Sdr\common\Maintenance;
+use stdClass;
 
 /**
  * MDB.php - at February 8, 2020.
  * @author Joylton Maciel <maciel dot inbox at gmail dot com>
- * 
+ *
  * MPDO - My PDO
  * DabaBase Connection and Manipulation
  */
@@ -78,7 +79,8 @@ class MDB
     {
         try {
             $this->connection->beginTransaction();
-            // $idList = [];
+
+            $idList = [];
 
             foreach ($dados as $table => $records) {
 
@@ -102,17 +104,22 @@ class MDB
                     $conn->bindValue(':' . $campo, $content);
                 }
                 $conn->execute();
-                // $idList[] = $this->connection->lastInsertId('stocks_id_seq');
+
+                if ($conn->rowCount() <= 0) {
+                    throw new \Exception("Erro ao gravar o registro");
+                }
+
+                $idList[$table] = $this->connection->lastInsertId();
             }
 
             $this->connection->commit();
-            
+
             // limpa parametros da consulta anterior
             $this->cleanAll();
 
-            // return $idList;
-            // 
-            
+            // return last Id
+            return $idList;
+
         } catch (\Exception $e) {
             $this->connection->rollBack();
             $this->cleanAll();
@@ -137,13 +144,14 @@ class MDB
         // command
         $sql .= ' SET ';
 
-        // monta 
+        // monta
         foreach ($dados as $campo => $content) {
             if (empty($update)) {
                 $update = $campo . " = :" . $campo;
             } else {
                 $update .= ", " . $campo . " = :" . $campo;
             }
+
             if (!isset($this->params[$campo])) {
                 $this->params[$campo] = $content;
             }
@@ -153,7 +161,9 @@ class MDB
         $sql .= $update;
 
         // conditions
-        if (isset($this->where)) $sql .= $this->where;
+        if (isset($this->where)) {
+            $sql .= $this->where;
+        }
 
         // prepare and execute the statment
         $conn = $this->connection->prepare($sql);
@@ -178,11 +188,16 @@ class MDB
         $sql = 'DELETE ';
 
         // table name
-        if (!isset($this->table)) throw new \Exception("SQL: Tabela indefinida.");
+        if (!isset($this->table)) {
+            throw new \Exception("SQL: Tabela indefinida.");
+        }
+
         $sql .= $this->table;
 
         // condition
-        if (isset($this->where)) $sql .= $this->where;
+        if (isset($this->where)) {
+            $sql .= $this->where;
+        }
 
         // prepare and execute the statment
         $conn = $this->connection->prepare($sql);
@@ -324,14 +339,14 @@ class MDB
                 list($field, $content) = explode('<=', $field);
                 $operator = '<=';
             } else {
-                throw new \Exception("Parâmetros passados para método where estão incompletos.");
+                throw new \Exception("Parâmetros passados para método where estão incompletos. ($field, $operator, $content)");
             }
         }
 
         return json_decode(json_encode([
             'field' => $field,
             'operator' => $operator,
-            'content' => $content
+            'content' => $content,
         ]));
     }
 
@@ -403,7 +418,7 @@ class MDB
         }
 
         /**
-         * O while a seguir eh importante para evitar campos com o mesmo 
+         * O while a seguir eh importante para evitar campos com o mesmo
          * nome na pesquisa.
          */
         while (true) {
@@ -554,7 +569,7 @@ class MDB
 
     /**
      * gera um Html DataList com retorno do sql query.
-     * 
+     *
      * @param array $htmldatalist
      * @return this
      */
@@ -567,7 +582,9 @@ class MDB
     public function get($limit = 0)
     {
         // parameters for pg_query_params
-        if (!isset($this->params)) $this->params = [];
+        if (!isset($this->params)) {
+            $this->params = [];
+        }
 
         // command
         $sql = 'SELECT ';
@@ -579,17 +596,26 @@ class MDB
         $sql .= $this->select;
 
         // sum
-        if (isset($this->sum)) $sql .= $this->sum;
+        if (isset($this->sum)) {
+            $sql .= $this->sum;
+        }
 
         // table name
-        if (!isset($this->table)) throw new \Exception("SQL: Tabela indefinida.");
+        if (!isset($this->table)) {
+            throw new \Exception("SQL: Tabela indefinida.");
+        }
+
         $sql .= $this->table;
 
         // join
-        if (isset($this->join)) $sql .= $this->join;
+        if (isset($this->join)) {
+            $sql .= $this->join;
+        }
 
         // condition
-        if (isset($this->where)) $sql .= $this->where;
+        if (isset($this->where)) {
+            $sql .= $this->where;
+        }
 
         // condition : extra
         if (isset($this->whereRaw)) {
@@ -605,18 +631,25 @@ class MDB
             if (!isset($this->where)) {
                 $sql .= ' WHERE ' . $this->orWhereRaw;
             } else {
-                $sql .= ' OR ' . $this->orWhereRaw;
+                // $sql .= ' OR ' . $this->orWhereRaw;
+                $sql .= ' AND ' . $this->orWhereRaw;
             }
         }
 
         // group by
-        if (isset($this->groupBy)) $sql .= $this->groupBy;
+        if (isset($this->groupBy)) {
+            $sql .= $this->groupBy;
+        }
 
         // order by
-        if (isset($this->orderBy)) $sql .= $this->orderBy;
+        if (isset($this->orderBy)) {
+            $sql .= $this->orderBy;
+        }
 
         // limit
-        if ($limit > 0) $sql .= ' LIMIT ' . $limit;
+        if ($limit > 0) {
+            $sql .= ' LIMIT ' . $limit;
+        }
 
         // SQL adjusts
         $sql = str_replace(', ,', ',', $sql);
@@ -636,7 +669,7 @@ class MDB
      * Execute a SQL statment (command/query)
      *
      * @param string $statment: use: dbname@sql_statment or just sql_statment
-     * @return array 
+     * @return object
      */
     public function execute($sql)
     {
@@ -743,13 +776,13 @@ class MDB
         }
 
         // limpa parametros da consulta anterior
-        $this->cleanAll(); 
+        $this->cleanAll();
 
         $eof = $count > 0 ? false : true;
         return json_decode(json_encode([
             'count' => $count,
             'EOF' => $eof,
-            'fields' => $fields
+            'fields' => $fields,
         ]));
     }
 
@@ -788,27 +821,132 @@ class MDB
         }
     }
 
+    public function loadedup()
+    {
+        echo "<br>MPDO - Dababase Manipulation Class";
+        echo "<hr>";
+        echo "<b>Loaded UP settings:</b>";
+
+        if (isset($this->join)) {
+            echo "<br><b>join:</b> " . $this->join;
+        }
+
+        if (isset($this->key)) {
+            echo "<br><b>key:</b> " . $this->key;
+        }
+
+        if (isset($this->groupBy)) {
+            echo "<br><b>groupBy:</b> " . $this->groupBy;
+        }
+
+        if (isset($this->orderBy)) {
+            echo "<br><b>orderBy:</b> " . $this->orderBy;
+        }
+
+        if (isset($this->noKey)) {
+            echo "<br><b>noKey:</b> " . $this->noKey;
+        }
+
+        if (isset($this->where)) {
+            echo "<br><b>where:</b> " . $this->where;
+        }
+
+        if (isset($this->whereRaw)) {
+            echo "<br><b>whereRaw:</b> " . $this->whereRaw;
+        }
+
+        if (isset($this->orWhere)) {
+            echo "<br><b>orWhere:</b> " . $this->orWhere;
+        }
+
+        if (isset($this->orWhereRaw)) {
+            echo "<br><b>orWhereRaw:</b> " . $this->orWhereRaw;
+        }
+
+        if (isset($this->params)) {
+            echo "<br><b>params:</b> " . $this->params;
+        }
+
+        if (isset($this->select)) {
+            echo "<br><b>select:</b> " . $this->select;
+        }
+
+        if (isset($this->sum)) {
+            echo "<br><b>sum:</b> " . $this->sum;
+        }
+
+        if (isset($this->table)) {
+            echo "<br><b>table:</b> " . $this->table;
+        }
+
+        if (isset($this->htmldatalist)) {
+            echo "<br><b>htmldtalist:</b> " . $this->htmldatalist;
+        }
+
+        echo "<hr>";
+    }
+
     public function cleanAll()
     {
-        if (isset($this->join)) unset($this->join);
-        if (isset($this->key)) unset($this->key);
-        if (isset($this->groupBy)) unset($this->groupBy);
-        if (isset($this->orderBy)) unset($this->orderBy);
-        if (isset($this->noKey)) unset($this->noKey);
-        if (isset($this->where)) unset($this->where);
-        if (isset($this->whereRaw)) unset($this->whereRaw);
-        if (isset($this->orWhere)) unset($this->orWhere);
-        if (isset($this->orWhereRaw)) unset($this->orWhereRaw);
-        if (isset($this->params)) unset($this->params);
-        if (isset($this->select)) unset($this->select);
-        if (isset($this->sum)) unset($this->sum);
-        if (isset($this->table)) unset($this->table);
-        if (isset($this->htmldatalist)) unset($this->htmldatalist);
+        if (isset($this->join)) {
+            unset($this->join);
+        }
+
+        if (isset($this->key)) {
+            unset($this->key);
+        }
+
+        if (isset($this->groupBy)) {
+            unset($this->groupBy);
+        }
+
+        if (isset($this->orderBy)) {
+            unset($this->orderBy);
+        }
+
+        if (isset($this->noKey)) {
+            unset($this->noKey);
+        }
+
+        if (isset($this->where)) {
+            unset($this->where);
+        }
+
+        if (isset($this->whereRaw)) {
+            unset($this->whereRaw);
+        }
+
+        if (isset($this->orWhere)) {
+            unset($this->orWhere);
+        }
+
+        if (isset($this->orWhereRaw)) {
+            unset($this->orWhereRaw);
+        }
+
+        if (isset($this->params)) {
+            unset($this->params);
+        }
+
+        if (isset($this->select)) {
+            unset($this->select);
+        }
+
+        if (isset($this->sum)) {
+            unset($this->sum);
+        }
+
+        if (isset($this->table)) {
+            unset($this->table);
+        }
+
+        if (isset($this->htmldatalist)) {
+            unset($this->htmldatalist);
+        }
     }
 
     private static function setDbname($dbname, $env)
     {
-
         if ($dbname == 'admin') {
             return $env->DB_ADMIN;
         }
@@ -824,3 +962,4 @@ class MDB
         return $dbname;
     }
 }
+

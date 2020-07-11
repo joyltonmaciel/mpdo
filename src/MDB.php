@@ -119,7 +119,6 @@ class MDB
 
             // return last Id
             return $idList;
-
         } catch (\Exception $e) {
             $this->connection->rollBack();
             $this->cleanAll();
@@ -329,16 +328,20 @@ class MDB
             } elseif (strpos($field, '>') > 0) {
                 list($field, $content) = explode('>', $field);
                 $operator = '>';
-            } elseif (strpos($field, '<') > 0) {
+            }
+            elseif (strpos($field, '<') > 0) {
                 list($field, $content) = explode('<', $field);
                 $operator = '<';
-            } elseif (strpos($field, '>=') > 0) {
+            }
+            elseif (strpos($field, '>=') > 0) {
                 list($field, $content) = explode('>=', $field);
                 $operator = '>=';
-            } elseif (strpos($field, '<=') > 0) {
+            }
+            elseif (strpos($field, '<=') > 0) {
                 list($field, $content) = explode('<=', $field);
                 $operator = '<=';
-            } else {
+            }
+            else {
                 throw new \Exception("Parâmetros passados para método where estão incompletos. ($field, $operator, $content)");
             }
         }
@@ -433,6 +436,54 @@ class MDB
             }
         }
 
+        return $this;
+    }
+
+    public function whereIn($field, $array)
+    {
+        if (!is_array($array)) {
+            throw new \Exception("Value passed to the method whereIn must be an array.");
+        }
+
+        if (!isset($this->whereIn)) {
+            $this->whereIn = $field . ' IN (';
+        } else {
+            $this->whereIn .= ' AND ' . $field . ' IN (';
+        }
+
+        $values = '';
+        foreach ($array as $vle) {
+            if (!empty($values)) {
+                $values .= ', ';
+            }
+            $values .= $vle;
+        }
+
+        $this->whereIn .= $values . ')';
+        return $this;
+    }
+
+    public function whereNotIn($field, $array)
+    {
+        if (!is_array($array)) {
+            throw new \Exception("Value passed to the method whereIn must be an array.");
+        }
+
+        if (!isset($this->whereIn)) {
+            $this->whereIn = $field . ' NOT IN (';
+        } else {
+            $this->whereIn .= ' AND ' . $field . ' NOT IN (';
+        }
+
+        $values = '';
+        foreach ($array as $vle) {
+            if (!empty($values)) {
+                $values .= ', ';
+            }
+            $values .= $vle;
+        }
+
+        $this->whereIn .= $values . ')';
         return $this;
     }
 
@@ -604,7 +655,6 @@ class MDB
         if (!isset($this->table)) {
             throw new \Exception("SQL: Tabela indefinida.");
         }
-
         $sql .= $this->table;
 
         // join
@@ -617,7 +667,16 @@ class MDB
             $sql .= $this->where;
         }
 
-        // condition : extra
+        // condition : whereIn
+        if (isset($this->whereIn)) {
+            if (!isset($this->where)) {
+                $sql .= ' WHERE ' . $this->whereIn;
+            } else {
+                $sql .= ' AND ' . $this->whereIn;
+            }
+        }
+
+        // condition : whereRaw
         if (isset($this->whereRaw)) {
             if (!isset($this->where)) {
                 $sql .= ' WHERE ' . $this->whereRaw;
@@ -962,4 +1021,3 @@ class MDB
         return $dbname;
     }
 }
-

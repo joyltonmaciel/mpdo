@@ -55,6 +55,22 @@ $db->table('folhas')
     ->get();
 ```
 
+**WhereIn**
+
+```
+$db->table('tablename')
+    ->whereIn('id', [34, 52])
+    ->get();
+```
+
+**WhereNotIn**
+
+```
+$db->table('tablename')
+    ->whereNotIn('id', [34, 52])
+    ->get();
+```
+
 **whereRaw**
 
 ```
@@ -122,4 +138,90 @@ $db->table('tabela')->where('id', $id)->update(['field_name' => $value]);
 
 ```
 $db->table('table')->where('id', $id)->delete();
+```
+
+**Samples**
+
+```
+$resp = $db
+	->table('folhas')
+	->select('folhas.folhaid')
+	->select('folhas.mes')
+	->select('folhas.ano')
+	->select('fp_afastamentos.afastid')
+	->select('fp_afastamentos.afastamento')
+	->select('fp_afastamentos.termino')
+	->select('folhasdescricao.usuarioid')
+	->select('folhasdescricao.contratoid')
+	->where('folhas.folhaid', $values->key)
+	->join('folhasdescricao', 'folhasdescricao.folhaid', '=', 'folhas.folhaid')
+	->join('fp_afastamentos', 'fp_afastamentos.afastid', '=', 'folhasdescricao.afastid')
+	->groupBy('folhas.folhaid, folhas.mes, folhas.ano, fp_afastamentos.afastid')
+	->groupBy('folhasdescricao.usuarioid, folhasdescricao.contratoid')
+	->groupBy('fp_afastamentos.afastamento')
+	->groupBy('fp_afastamentos.termino')
+	->Key('afastid')
+	->get();
+```
+
+```
+$resp = $db
+	->table("(select folhaid, to_date(ano || '-' || mes || '-01', 'yyyy-mm-dd') as datafolha from folhas) as tableA")
+	->join('folhas', 'folhas.folhaid', '=', 'tableA.folhaid')
+	->Key('folhaid')
+	->where('tpfolha', 0)
+	->where('datafolha', '<', '2020-04-01')
+	->orderBy('ano', 'desc')
+	->orderBy('mes', 'desc')
+	->get(3);
+```
+
+```
+$resp = $mdb
+	->table('folhasdescricao')
+	->select('folhaid, usuarioid, contratoid, rescisaoid, afastid')
+	->where('folhasdescricao.folhaid', $folha->folhaid)
+	->whereRaw("(folhasdescricao.rescisaoid>0 or folhasdescricao.afastid>0)")
+	->groupBy('folhaid, usuarioid, contratoid, rescisaoid, afastid')
+	->debug(true)
+	->Key('contratoid')
+	->get();
+```
+
+```
+$resc = $mdb
+	->table('fp_salmatern')
+	->Key('contratoid')
+	->select('fp_salmatern.contratoid, fp_salmatern.datefr')
+	->join('folhasdescricao', 'fp_salmatern.contratoid', '=', 'folhasdescricao.contratoid')
+	->where('folhasdescricao.folhaid', $folha->folhaid)
+	->where('folhasdescricao.tp_rubrica', '=', '1')
+	->whereRaw('folhasdescricao.rubricaid in (select rubricaid from fp_rubricas where rubrica_ident=2)')
+	->orWhereRaw("(datefr>='" . $competencia->inicial . "' and datefr<='" . $competencia->final . "')")
+	->orWhereRaw("(datefr<='" . $competencia->inicial . "' and dateto>='" . $competencia->final . "')")
+	->orWhereRaw("(dateto>='" . $competencia->inicial . "' and dateto<='" . $competencia->final . "')")
+	->debug(true)
+	->get();
+```
+
+### New features
+
+**whereIn**
+
+from
+
+```
+select * FROM brands WHERE id in ( select brand_id from products WHERE category_id IN (220, 222, 223) GROUP by brand_id )
+```
+
+to
+
+```
+->whereIn('id', function ($query) {
+    $query
+        ->select('brand_id')
+        ->from('products')
+        ->whereIn('category_id', [220, 222, 223])
+        ->groupBy('brand_id');
+})->get();
 ```

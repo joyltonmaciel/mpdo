@@ -1,19 +1,23 @@
 # MPDO - My Personal PDO
 
-Database Manipulation which looks like Laravel Eloquent syntax.
+Small Database Manipulation which looks like Laravel Eloquent syntax. 
+Based on PHP-PDO library.
 
-# New features
+[![Latest Stable Version][ico-stable]][link-packagist]
+[![Latest Version on Packagist][ico-version]][link-packagist]
+[![License][ico-license]][link-packagist]
 
-Modifications
-Accessors & Mutators
+[![Issues][ico-issues]][link-issues]
+[![Forks][ico-forks]][link-forks]
+[![Stars][ico-stars]][link-stars]
 
-### Install
+## Install
 
 ```
 composer require joyltonmaciel/mpdo:dev-master
 ```
 
-### The dotEnv Settings
+## The dotEnv Settings
 
 At the root of the project, create a file called _.env_ with the following content:
 
@@ -24,7 +28,7 @@ DB_USER=[data_base_user_name]
 DB_PASS=[data_base_user_name_password]  
 ```
 
-### Usage
+## Usage
 
 **Connect to Database**
 
@@ -32,6 +36,29 @@ DB_PASS=[data_base_user_name_password]
 require_once __DIR__ . '/../vendor/autoload.php';
 use Mpdo\MDB;
 $db = new MDB($dbname);
+```
+
+**insert**
+
+```
+$dados = new stdClass();
+$dados->{'tabela'} = new stdClass();
+$dados->{'tabela'}->nome = 'Joao';
+$dados->{'tabela'}->date = '2020-01-01';
+$dados->{'tabela'}->valid = true;
+$db->insert($dados);
+```
+
+**update**
+
+```
+$db->table('tabela')->where('id', $id)->update(['field_name' => $value]);
+```
+
+**delete**
+
+```
+$db->table('table')->where('id', $id)->delete();
 ```
 
 **Join**
@@ -117,29 +144,6 @@ $db->table('TableA')
     ->get(3);
 ```
 
-**insert**
-
-```
-$dados = new stdClass();
-$dados->{'tabela'} = new stdClass();
-$dados->{'tabela'}->nome = 'Joao';
-$dados->{'tabela'}->date = '2020-01-01';
-$dados->{'tabela'}->valid = true;
-$db->insert($dados);
-```
-
-**update**
-
-```
-$db->table('tabela')->where('id', $id)->update(['field_name' => $value]);
-```
-
-**delete**
-
-```
-$db->table('table')->where('id', $id)->delete();
-```
-
 **Samples**
 
 ```
@@ -204,7 +208,9 @@ $resc = $mdb
 	->get();
 ```
 
-### New features
+## New features
+
+**Modifications Accessors & Mutators**
 
 **whereIn**
 
@@ -225,3 +231,8 @@ to
         ->groupBy('brand_id');
 })->get();
 ```
+
+## Credits
+
+Joylton Maciel (owner and developer)
+**maciel** dot inbox at gmail dot com 

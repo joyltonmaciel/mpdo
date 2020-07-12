@@ -75,10 +75,56 @@ class MDB
         }
     }
 
+    /**
+     * BeginTrans() start transaction features manually.
+     * In this case, the insert will not start or commit 
+     * a transaction.
+     *
+     * @return void
+     */
+    public function BeginTrans()
+    {
+        if (!isset($this->intransaction)) {
+            $this->intransaction = $this->connection->beginTransaction();
+        }
+        return $this;
+    }
+
+    /**
+     * Roll back a transaction
+     *
+     * @return void
+     */
+    public function RollbackTrans()
+    {
+        if (isset($this->intransaction)) {
+            $this->connection->rollBack();
+            unset($this->intransaction);
+        }
+        return $this;
+    }
+
+    /**
+     * Commit Transaction
+     *
+     * @return void
+     */
+    public function CommitTrans()
+    {
+        if (isset($this->intransaction)) {
+            $this->connection->commit();
+            unset($this->intransaction);
+        }
+        return $this;
+    }
+
     public function insert($dados, $auditoria = '', $formulario = '')
     {
         try {
-            $this->connection->beginTransaction();
+
+            if (!isset($this->intransaction)) {
+                $this->connection->beginTransaction();
+            }
 
             $idList = [];
 
@@ -112,7 +158,10 @@ class MDB
                 $idList[$table] = $this->connection->lastInsertId();
             }
 
-            $this->connection->commit();
+            // $intransaction is set manually
+            if (!isset($this->intransaction)) {
+                $this->connection->commit();
+            }
 
             // limpa parametros da consulta anterior
             $this->cleanAll();
@@ -120,7 +169,9 @@ class MDB
             // return last Id
             return $idList;
         } catch (\Exception $e) {
-            $this->connection->rollBack();
+			if (!isset($this->intransaction)) { 
+				$this->connection->rollBack();
+			}
             $this->cleanAll();
             throw new \Exception("Gravar: " . $e->getMessage());
         }
@@ -453,7 +504,7 @@ class MDB
 
         $values = '';
         foreach ($array as $vle) {
-            if (!empty($values)) {
+            if (strlen($values) > 0) {
                 $values .= ', ';
             }
             $values .= $vle;
@@ -880,11 +931,16 @@ class MDB
         }
     }
 
+    /**
+     * A debug features to show all loaded parameters.
+     *
+     * @return void
+     */
     public function loadedup()
     {
         echo "<br>MPDO - Dababase Manipulation Class";
         echo "<hr>";
-        echo "<b>Loaded UP settings:</b>";
+        echo "<b>Loaded UP parameters and settings:</b>";
 
         if (isset($this->join)) {
             echo "<br><b>join:</b> " . $this->join;
@@ -912,6 +968,14 @@ class MDB
 
         if (isset($this->whereRaw)) {
             echo "<br><b>whereRaw:</b> " . $this->whereRaw;
+        }
+
+        if (isset($this->whereIn)) {
+            echo "<br><b>whereIn:</b> " . $this->whereIn;
+        }
+
+        if (isset($this->whereNotIn)) {
+            echo "<br><b>whereNotIn:</b> " . $this->whereNotIn;
         }
 
         if (isset($this->orWhere)) {
@@ -973,6 +1037,14 @@ class MDB
 
         if (isset($this->whereRaw)) {
             unset($this->whereRaw);
+        }
+
+        if (isset($this->whereIn)) {
+            unset($this->whereIn);
+        }
+
+        if (isset($this->whereNotIn)) {
+            unset($this->whereNotIn);
         }
 
         if (isset($this->orWhere)) {

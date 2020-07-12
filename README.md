@@ -3,14 +3,6 @@
 Small Database Manipulation which looks like Laravel Eloquent syntax. 
 Based on PHP-PDO library.
 
-[![Latest Stable Version][ico-stable]][link-packagist]
-[![Latest Version on Packagist][ico-version]][link-packagist]
-[![License][ico-license]][link-packagist]
-
-[![Issues][ico-issues]][link-issues]
-[![Forks][ico-forks]][link-forks]
-[![Stars][ico-stars]][link-stars]
-
 ## Install
 
 ```

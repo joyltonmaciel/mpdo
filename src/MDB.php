@@ -986,6 +986,10 @@ class MDB
             echo "<br><b>orWhereRaw:</b> " . $this->orWhereRaw;
         }
 
+        if (isset($this->whereNotNull)) {
+            echo "<br><b>whereNotNull:</b> " . $this->whereNotNull;
+        }
+
         if (isset($this->params)) {
             echo "<br><b>params:</b> " . $this->params;
         }
@@ -1045,6 +1049,10 @@ class MDB
 
         if (isset($this->whereNotIn)) {
             unset($this->whereNotIn);
+        }
+
+        if (isset($this->whereNotNull)) {
+            unset($this->whereNotNull);
         }
 
         if (isset($this->orWhere)) {

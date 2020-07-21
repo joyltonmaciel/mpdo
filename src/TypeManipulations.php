@@ -1,11 +1,6 @@
 <?php
 
-namespace Sdr\common;
-
-/**
- * Classe auxiliar para o tratamento de strings, array e objects.
- * by Joylton Maciel, May 25, 2020.
- */
+namespace Mpdo;
 
 use stdClass;
 

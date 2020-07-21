@@ -6,6 +6,7 @@ use stdClass;
 use Mpdo\DotEnv;
 use Mpdo\Strings;
 use Mpdo\TypeManipulations;
+use Sdr\common\Maintenance;
 
 /**
  * MDB.php - at February 8, 2020.
@@ -861,17 +862,20 @@ class MDB
 
     private function setKey()
     {
-        $auxkey = $this->key;
-        $this->key = [];
-        if (strpos($auxkey, '|') > 0) {
-            $this->key = explode('|', $auxkey);
-        } else {
-            $this->key[0] = $auxkey;
+        if (isset($this->key)) {
+            $auxkey = $this->key;
+            $this->key = [];
+            if (strpos($auxkey, '|') > 0) {
+                $this->key = explode('|', $auxkey);
+            } else {
+                $this->key[0] = $auxkey;
+            }
         }
     }
 
-    private function add_keys_dynamic($main_array, $keys, $value)
+    private function add_keys_dynamic($main_array, $value)
     {
+        $keys = $this->key;
         $tmp_array = &$main_array;
         while (count($keys) > 0) {
             $k = trim(array_shift($keys));
@@ -902,7 +906,7 @@ class MDB
                 $count = 1;
             } else {
                 if (isset($this->key)) {
-                    $fields = $this->add_keys_dynamic($fields, $this->key, $record);
+                    $fields = $this->add_keys_dynamic($fields, $record);
                 } else {
                     $fields[$i] = $record;
                 }

@@ -2,10 +2,10 @@
 
 namespace Mpdo;
 
-use stdClass;
 use Mpdo\DotEnv;
 use Mpdo\Strings;
-use Mpdo\TypeManipulations;
+use Sdr\common\Maintenance;
+use stdClass;
 
 /**
  * MDB.php - at February 8, 2020.
@@ -169,9 +169,9 @@ class MDB
             // return last Id
             return $idList;
         } catch (\Exception $e) {
-            if (!isset($this->intransaction)) {
-                $this->connection->rollBack();
-            }
+			if (!isset($this->intransaction)) { 
+				$this->connection->rollBack();
+			}
             $this->cleanAll();
             throw new \Exception("Gravar: " . $e->getMessage());
         }
@@ -379,22 +379,27 @@ class MDB
             } elseif (strpos($field, '>') > 0) {
                 list($field, $content) = explode('>', $field);
                 $operator = '>';
-            } elseif (strpos($field, '<') > 0) {
+            }
+            elseif (strpos($field, '<') > 0) {
                 list($field, $content) = explode('<', $field);
                 $operator = '<';
-            } elseif (strpos($field, '>=') > 0) {
+            }
+            elseif (strpos($field, '>=') > 0) {
                 list($field, $content) = explode('>=', $field);
                 $operator = '>=';
-            } elseif (strpos($field, '<=') > 0) {
+            }
+            elseif (strpos($field, '<=') > 0) {
                 list($field, $content) = explode('<=', $field);
                 $operator = '<=';
-            } elseif (strpos($field, '!=') > 0) {
+            }
+            elseif (strpos($field, '!=') > 0) {
                 list($field, $content) = explode('!=', $field);
                 $operator = '!=';
-            } else {
+            }
+            else {
                 $operator = '=';
                 $content = '';
-                //                throw new \Exception("Parâmetros passados para método where estão incompletos. ($field, $operator, $content)");
+//                throw new \Exception("Parâmetros passados para método where estão incompletos. ($field, $operator, $content)");
             }
         }
 
@@ -859,62 +864,37 @@ class MDB
         return $retorno;
     }
 
-    private function setKey()
-    {
-        $auxkey = $this->key;
-        $this->key = [];
-        if (strpos($auxkey, '|') > 0) {
-            $this->key = explode('|', $auxkey);
-        } else {
-            $this->key[0] = $auxkey;
-        }
-    }
-
-    private function add_keys_dynamic($main_array, $keys, $value)
-    {
-        $tmp_array = &$main_array;
-        while (count($keys) > 0) {
-            $k = trim(array_shift($keys));
-            if (!is_array($tmp_array)) {
-                $tmp_array = [];
-            }
-            if ($this->rules == 'onlynumbers') {
-                $k = Strings::onlyNumbers($value[$k]);
-            } else {
-                $k = $value[$k];
-            }
-            $tmp_array = &$tmp_array[$k];
-        }
-        $tmp_array = $value;
-        return $main_array;
-    }
-
     public function ResultFetchAll($result)
     {
         $count = 0;
         $eof = true;
-        $fields = [];
-        $this->setKey();
+        $fields = new stdClass();
 
         foreach ($result->fetchAll() as $i => $record) {
             if (isset($this->noKey)) {
-                $fields = $record;
-                $count = 1;
+                $fields = json_decode(json_encode($record));
             } else {
                 if (isset($this->key)) {
-                    $fields = $this->add_keys_dynamic($fields, $this->key, $record);
+                    if (empty($this->rules)) {
+                        $fields->{trim($record[$this->key])} = json_decode(json_encode($record));
+                    } else {
+                        if ($this->rules == 'onlynumbers') {
+                            $fields->{Strings::onlyNumbers(trim($record[$this->key]))} = json_decode(json_encode($record));
+                        } else {
+                            $fields->{trim($record[$this->key])} = json_decode(json_encode($record));
+                        }
+                    }
                 } else {
-                    $fields[$i] = $record;
+                    $fields->{$i} = json_decode(json_encode($record));
                 }
-                $count++;
             }
+            $count++;
         }
 
         // limpa parametros da consulta anterior
         $this->cleanAll();
 
         $eof = $count > 0 ? false : true;
-        $fields = TypeManipulations::array2object($fields);
         return json_decode(json_encode([
             'count' => $count,
             'EOF' => $eof,

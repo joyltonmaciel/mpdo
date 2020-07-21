@@ -392,8 +392,14 @@ class MDB
                 list($field, $content) = explode('<=', $field);
                 $operator = '<=';
             }
+            elseif (strpos($field, '!=') > 0) {
+                list($field, $content) = explode('!=', $field);
+                $operator = '!=';
+            }
             else {
-                throw new \Exception("Parâmetros passados para método where estão incompletos. ($field, $operator, $content)");
+                $operator = '=';
+                $content = '';
+//                throw new \Exception("Parâmetros passados para método where estão incompletos. ($field, $operator, $content)");
             }
         }
 

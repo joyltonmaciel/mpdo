@@ -118,7 +118,7 @@ class MDB
         return $this;
     }
 
-    public function insert($dados, $auditoria = '', $formulario = '')
+    public function insert($dados, $serial = null)
     {
         try {
 
@@ -126,6 +126,7 @@ class MDB
                 $this->connection->beginTransaction();
             }
 
+            $fillIdList = true;
             $idList = [];
 
             foreach ($dados as $table => $records) {
@@ -134,10 +135,20 @@ class MDB
                 $fields = '';
                 $values = '';
                 foreach ($records as $campo => $content) {
+
                     if (!empty($fields)) {
                         $fields .= ', ';
                         $values .= ', ';
                     }
+
+                    // If the serial filder must receive a value, the idList
+                    // will not return the lastid (autoincrement).
+                    if (!is_null($serial)) {
+                        if ($serial == $campo) {
+                            $fillIdList = false;
+                        }
+                    }
+
                     $fields .= $campo;
                     $values .= ':' . $campo;
                     $assoc_array[$campo] = $content;
@@ -155,7 +166,9 @@ class MDB
                     throw new \Exception("Erro ao gravar o registro");
                 }
 
-                $idList[$table] = $this->connection->lastInsertId();
+                if ($fillIdList) {
+                    $idList[$table] = $this->connection->lastInsertId();
+                }
             }
 
             // $intransaction is set manually

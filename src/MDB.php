@@ -337,7 +337,7 @@ class MDB
      * @param string $afield
      * @param string $operator
      * @param string $bfield
-     * @return void
+     * @return this 
      */
     public function join($table, $afield, $operator, $bfield)
     {
@@ -504,6 +504,74 @@ class MDB
         return $this;
     }
 
+
+    public function orWhere($field, $operator = '', $content = '')
+    {
+        /**
+         * Corrige os campos boolean para string 't' ou 'f'
+         */
+        $operator = $this->setTrueFalse($operator);
+        $content = $this->setTrueFalse($content);
+
+        /**
+         * corrige os campos inteiros, flutuantes ou numericos para string
+         */
+        $operator = $this->setIntFloatNumeric($operator);
+        $content = $this->setIntFloatNumeric($content);
+
+        /**
+         * Separa a string field quando o campo, o operador e a content
+         * estao juntos no parametro field.
+         */
+        $separatestring = $this->setFillOperatorAndContent($field, $operator, $content);
+        $field = $separatestring->field;
+        $operator = $separatestring->operator;
+        $content = $separatestring->content;
+
+        /**
+         * Corrige o operador
+         */
+        if (
+            is_string($operator) &&
+            is_string($content)
+        ) {
+            if (
+                (strlen($operator) <= 0 && strlen($content) <= 0) ||
+                (strlen($operator) <= 0 && strlen($content) >= 1)
+            ) {
+                throw new \Exception("Parâmetros incompletos para consulta (Field: $field Operator: $operator Content: $content).");
+            } elseif (strlen($operator) >= 1 && strlen($content) <= 0) {
+                $content = $operator;
+                $operator = '=';
+            }
+        }
+
+        if (!isset($this->where)) {
+            throw new \Exception("Where condition deve ser informado subsequentemente anterior à orWhere()");
+        } else {
+            $this->where .= ' OR ';
+        }
+
+        /**
+         * O while a seguir eh importante para evitar campos com o mesmo
+         * nome na pesquisa.
+         */
+        $arrayfield = $field;
+        while (true) {
+
+            $arrayfield = sprintf("%s", chr(rand(97, 122))) . '_'
+                . str_replace('.', '__', $arrayfield);
+
+            if (!isset($this->params[$arrayfield])) {
+                $this->params[$arrayfield] = $content;
+                $this->where .= $field . ' ' . $operator . ' ' . ':' . $arrayfield;
+                break;
+            }
+        }
+
+        return $this;
+    }
+
     public function whereIn($field, $array)
     {
         if (!is_array($array)) {
@@ -607,30 +675,6 @@ class MDB
             }
         }
 
-        return $this;
-    }
-
-    public function orWhere($field, $operator, $content)
-    {
-        $operator = $this->setTrueFalse($operator);
-        $content = $this->setTrueFalse($content);
-
-        if (is_int($operator) || is_float($operator)) {
-            $operator = strval($operator);
-        }
-
-        if (is_int($content) || is_float($content)) {
-            $content = strval($content);
-        }
-
-        if (!isset($this->where)) {
-            throw new \Exception("Where deve ser informado subsequentemente anterior à onWhere()");
-        } else {
-            $this->where .= ' or ';
-        }
-
-        $this->params[$field] = $content;
-        $this->where .= $field . ' ' . $operator . ' ' . ':' . count($this->params);
         return $this;
     }
 

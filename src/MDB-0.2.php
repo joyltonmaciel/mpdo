@@ -23,11 +23,10 @@ class MDB
      * Open database
      *
      * @param string $dbname. Must exists a database name.
-     * @param string $host. Which machine is installed the database.
      * @param boolean $debug, when true will show the sql query command.
      * @param boolean $debug
      */
-    public function __construct($dbname, $host = '', $debug = '')
+    public function __construct($dbname, $debug = false)
     {
 
         if (empty($dbname)) {
@@ -48,15 +47,10 @@ class MDB
             $dbname = self::setDbname($dbname, $env);
 
             /**
-             * Set the Host
-             */
-            $host = self::setHost($host, $env);
-
-            /**
              * set the Connection data
              */
             $conn = $env->DB_DRIVER
-                . ":host=" . $host
+                . ":host=" . $env->DB_HOST
                 . ";dbname=" . $dbname;
 
             /**
@@ -1191,18 +1185,5 @@ class MDB
         }
 
         return $dbname;
-    }
-
-    private static function setHost($host, $env)
-    {
-        if (empty($host)) {
-            return $env->DB_HOST;
-        }
-
-        if (isset($env->{'DB_HOST' . '_' . strtoupper($host)})) {
-            return $env->{'DB_HOST' . '_' . strtoupper($host)};
-        } else {
-            return $env->DB_HOST;
-        }
     }
 }

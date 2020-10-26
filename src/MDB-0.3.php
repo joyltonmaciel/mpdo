@@ -18,7 +18,6 @@ use Mpdo\TypeManipulations;
 class MDB
 {
     protected $env;
-    protected $database;
 
     /**
      * Open database
@@ -73,12 +72,6 @@ class MDB
              * Set PDO attributs to the connection
              */
             $this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-
-            /**
-             * set the database name
-             */
-            $this->database = $dbname;
-
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }

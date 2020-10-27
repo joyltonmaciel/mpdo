@@ -18,7 +18,7 @@ use Mpdo\TypeManipulations;
 class MDB
 {
     protected $env;
-    public $database;
+    protected $database;
 
     /**
      * Open database

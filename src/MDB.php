@@ -110,8 +110,8 @@ class MDB
      */
     public function RollbackTrans()
     {
+        $this->connection->rollBack();
         if (isset($this->intransaction)) {
-            $this->connection->rollBack();
             unset($this->intransaction);
         }
         return $this;

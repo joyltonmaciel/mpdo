@@ -78,7 +78,6 @@ class MDB
              * set the database name
              */
             $this->database = $dbname;
-
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
@@ -653,16 +652,20 @@ class MDB
         return $this;
     }
 
-    public function sum($field, $nickname = null)
+    public function sum($field, $nickname = '')
     {
+        if (empty($field)) {
+            return;
+        }
+
         if (!isset($this->sum)) {
             $this->sum = '';
         }
-
-        $this->sum .= ', sum(' . $field . ')';
-
-        if (!is_null($nickname)) {
-            $this->sum .= ' as ' . $nickname;
+        
+        if (empty($nickname)) {
+            $this->sum .= 'sum(' . $field . ') AS ' . $field;
+        } else {
+            $this->sum .= 'sum(' . $field . ') AS ' . $nickname;
         }
 
         if (isset($this->select)) {
@@ -691,12 +694,22 @@ class MDB
         return $this;
     }
 
+    public function whereNull($whereNull)
+    {
+        if (!isset($this->where)) {
+            $this->where = ' where ' . $whereNull . ' is NULL ';
+        } else {
+            $this->where .= ' and ' . $whereNull . ' is NULL ';
+        }
+        return $this;
+    }
+
     public function whereNotNull($whereNotNull)
     {
         if (!isset($this->where)) {
-            $this->where = ' where ' . $whereNotNull . ' is not null ';
+            $this->where = ' where ' . $whereNotNull . ' is not NULL ';
         } else {
-            $this->where .= ' and ' . $whereNotNull . ' is not null ';
+            $this->where .= ' and ' . $whereNotNull . ' is not NULL ';
         }
         return $this;
     }
@@ -1096,6 +1109,10 @@ class MDB
             echo "<br><b>orWhereRaw:</b> " . $this->orWhereRaw;
         }
 
+        if (isset($this->whereNull)) {
+            echo "<br><b>whereNull:</b> " . $this->whereNull;
+        }
+
         if (isset($this->whereNotNull)) {
             echo "<br><b>whereNotNull:</b> " . $this->whereNotNull;
         }
@@ -1168,6 +1185,10 @@ class MDB
             unset($this->whereNotIn);
         }
 
+        if (isset($this->whereNull)) {
+            unset($this->whereNull);
+        }
+
         if (isset($this->whereNotNull)) {
             unset($this->whereNotNull);
         }
@@ -1237,4 +1258,3 @@ class MDB
         }
     }
 }
-

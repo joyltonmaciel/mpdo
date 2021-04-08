@@ -90,6 +90,14 @@ $db->table('tablename')
     ->get();
 ```
 
+**WhereIsNull**
+
+```
+$db->table('tablename')
+    ->whereIsNull('fieldname')
+    ->get();
+```
+
 **WhereNotNull**
 
 ```

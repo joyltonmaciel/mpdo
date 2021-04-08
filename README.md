@@ -90,11 +90,11 @@ $db->table('tablename')
     ->get();
 ```
 
-**WhereIsNull**
+**WhereNull**
 
 ```
 $db->table('tablename')
-    ->whereIsNull('fieldname')
+    ->whereNull('fieldname')
     ->get();
 ```
 

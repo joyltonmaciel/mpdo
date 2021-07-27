@@ -274,6 +274,33 @@ class MDB
             $sql .= $this->where;
         }
 
+        // condition : whereIn
+        if (isset($this->whereIn)) {
+            if (!isset($this->where)) {
+                $sql .= ' WHERE ' . $this->whereIn;
+            } else {
+                $sql .= ' AND ' . $this->whereIn;
+            }
+        }
+
+        // condition : whereRaw
+        if (isset($this->whereRaw)) {
+            if (!isset($this->where)) {
+                $sql .= ' WHERE ' . $this->whereRaw;
+            } else {
+                $sql .= ' AND ' . $this->whereRaw;
+            }
+        }
+
+        // condition : or where
+        if (isset($this->orWhereRaw)) {
+            if (!isset($this->where)) {
+                $sql .= ' WHERE ' . $this->orWhereRaw;
+            } else {
+                $sql .= ' AND ' . $this->orWhereRaw;
+            }
+        }
+
         // prepare and execute the statment
         $conn = $this->connection->prepare($sql);
         $conn->execute($this->params);
@@ -661,7 +688,7 @@ class MDB
         if (!isset($this->sum)) {
             $this->sum = '';
         }
-        
+
         if (empty($nickname)) {
             $this->sum .= 'sum(' . $field . ') AS ' . $field;
         } else {

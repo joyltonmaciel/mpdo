@@ -381,9 +381,9 @@ class MDB
     public function join($table, $afield, $operator, $bfield)
     {
         if (!isset($this->join)) {
-            $this->join = ' join ' . $table . ' on ' . $afield . ' ' . $operator . ' ' . $bfield;
+            $this->join = ' JOIN ' . $table . ' ON ' . $afield . ' ' . $operator . ' ' . $bfield;
         } else {
-            $this->join .= ' join ' . $table . ' on ' . $afield . ' ' . $operator . ' ' . $bfield;
+            $this->join .= ' JOIN ' . $table . ' ON ' . $afield . ' ' . $operator . ' ' . $bfield;
         }
         return $this;
     }
@@ -585,6 +585,19 @@ class MDB
             }
         }
 
+        /**
+         * Aplica parametros para Postgres
+         */
+        if (substr($field, 0, 9) == 'translate') {
+            $arrayfield = substr($field, 10);
+            $arrayfield = substr($arrayfield, 0, strpos($arrayfield, ','));
+        } else {
+            $arrayfield = $field;
+        }
+
+        /**
+         * Compose the query
+         */
         if (!isset($this->where)) {
             throw new \Exception("Where condition deve ser informado subsequentemente anterior à orWhere()");
         } else {
@@ -592,10 +605,8 @@ class MDB
         }
 
         /**
-         * O while a seguir eh importante para evitar campos com o mesmo
-         * nome na pesquisa.
+         * The statement below will avoid field redundance.
          */
-        $arrayfield = $field;
         while (true) {
 
             $arrayfield = sprintf("%s", chr(rand(97, 122))) . '_'

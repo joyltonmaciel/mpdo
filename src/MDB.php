@@ -2,7 +2,6 @@
 
 namespace Mpdo;
 
-use stdClass;
 use Mpdo\DotEnv;
 use Mpdo\Strings;
 use Mpdo\TypeManipulations;
@@ -18,6 +17,7 @@ use Mpdo\TypeManipulations;
 class MDB
 {
     protected $env;
+    protected $host;
     public $database;
 
     /**
@@ -51,13 +51,19 @@ class MDB
             /**
              * Set the Host
              */
-            $host = self::setHost($host, $env);
+            $dbhost = self::setHost($host, $env);
+
+            /**
+             * set the Port
+             */
+            $dbport = self::setPort($host, $env);
 
             /**
              * set the Connection data
              */
             $conn = $env->DB_DRIVER
-                . ":host=" . $host
+                . ":host=" . $dbhost
+                . ";port=" . $dbport
                 . ";dbname=" . $dbname;
 
             /**
@@ -78,6 +84,7 @@ class MDB
              * set the database name
              */
             $this->database = $dbname;
+            $this->host = $dbhost;
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
@@ -1285,14 +1292,34 @@ class MDB
 
     private static function setHost($host, $env)
     {
-        if (empty($host)) {
-            return $env->DB_HOST;
+        if (isset($env->{'DB_HOST_' . strtoupper($host)})) {
+            $dbhost = $env->{'DB_HOST_' . strtoupper($host)};
+        } else {
+            $dbhost = $env->DB_HOST;
         }
 
-        if (isset($env->{'DB_HOST' . '_' . strtoupper($host)})) {
-            return $env->{'DB_HOST' . '_' . strtoupper($host)};
-        } else {
-            return $env->DB_HOST;
+        if (strpos($dbhost, ':') > 0) {
+            $dbhost = explode(':', $dbhost)[0];
         }
+
+        return $dbhost;
+    }
+
+    private static function setPort($host, $env)
+    {
+        if (isset($env->{'DB_HOST_' . strtoupper($host)})) {
+            $dbport = $env->{'DB_HOST_' . strtoupper($host)};
+        } else {
+            $dbport = $env->DB_HOST;
+        }
+
+        if (strpos($dbport, ':') > 0) {
+            $dbport = explode(':', $dbport)[1];
+        } else {
+            $dbport = '5432';
+        }
+
+        return $dbport;
     }
 }
+

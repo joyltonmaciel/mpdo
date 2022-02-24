@@ -358,9 +358,22 @@ class MDB
         return $this;
     }
 
+    public function limit(int $limit = 0)
+    {
+        if ($limit > 0) {
+            return $this->limit = $limit;
+        }
+    }
+
+    public function offset(int $offset = 0)
+    {
+        if ($offset > 0) {
+            return $this->offset = $offset;
+        }
+    }
+
     public function all()
     {
-        // ToDo Here
         return $this;
     }
 
@@ -887,6 +900,19 @@ class MDB
         // limit
         if ($limit > 0) {
             $sql .= ' LIMIT ' . $limit;
+        } else {
+            if (isset($this->limit)) {
+                if ($this->limit > 0) {
+                    $sql .= ' LIMIT ' . $this->limit;
+                }
+            }
+        }
+
+        // OFFSET
+        if (isset($this->offset)) {
+            if ($this->offset > 0) {
+                $sql .= ' OFFSET ' . $this->offset;
+            }
         }
 
         // SQL adjusts

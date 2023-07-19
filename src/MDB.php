@@ -8,17 +8,43 @@ use Mpdo\TypeManipulations;
 
 /**
  * MDB.php - at February 8, 2020.
- * @author Joylton Maciel <maciel dot inbox at gmail dot com>
+ * @author Joylton Maciel, <maciel dot inbox at gmail dot com>
  *
- * MPDO - My PDO
+ * MPDO, My PDO.
  * DabaBase Connection and Manipulation
+ * v.0.1.0
  */
 
 class MDB
 {
     protected $env;
     protected $host;
+
     public $database;
+    public $sum;
+    public $join;
+    public $table;
+    public $rules;
+    public $connection;
+    public $htmldatalist;
+    public $intransaction;
+    public $key;
+    public $noKey;
+    public $orderBy;
+    public $where;
+    public $whereIn;
+    public $whereNull;
+    public $whereNotNull;
+    public $whereRaw;
+    public $orWhere;
+    public $orWhereRaw;
+    public $whereNotIn;
+    public $select;
+    public $debug;
+    public $offset;
+    public $limit;
+    public $params;
+    public $groupBy;
 
     /**
      * Open database
@@ -245,6 +271,33 @@ class MDB
         // conditions
         if (isset($this->where)) {
             $sql .= $this->where;
+        }
+
+        // condition : whereIn
+        if (isset($this->whereIn)) {
+            if (!isset($this->where)) {
+                $sql .= ' WHERE ' . $this->whereIn;
+            } else {
+                $sql .= ' AND ' . $this->whereIn;
+            }
+        }
+
+        // condition : whereRaw
+        if (isset($this->whereRaw)) {
+            if (!isset($this->where)) {
+                $sql .= ' WHERE ' . $this->whereRaw;
+            } else {
+                $sql .= ' AND ' . $this->whereRaw;
+            }
+        }
+
+        // condition : or where
+        if (isset($this->orWhereRaw)) {
+            if (!isset($this->where)) {
+                $sql .= ' WHERE ' . $this->orWhereRaw;
+            } else {
+                $sql .= ' AND ' . $this->orWhereRaw;
+            }
         }
 
         // prepare and execute the statment
@@ -1348,4 +1401,3 @@ class MDB
         return $dbport;
     }
 }
-

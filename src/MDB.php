@@ -4,7 +4,6 @@ namespace Mpdo;
 
 use Mpdo\DotEnv;
 use Mpdo\Strings;
-use Mpdo\TypeManipulations;
 
 /**
  * MDB.php - at February 8, 2020.
@@ -1135,7 +1134,7 @@ class MDB
         $this->cleanAll();
 
         $eof = $count > 0 ? false : true;
-        $fields = TypeManipulations::array2object($fields);
+        $fields = json_decode(json_encode($fields,JSON_FORCE_OBJECT));
         return json_decode(json_encode([
             'count' => $count,
             'EOF' => $eof,

@@ -4,6 +4,7 @@ namespace Mpdo;
 
 use Mpdo\DotEnv;
 use Mpdo\Strings;
+use stdClass;
 
 /**
  * MDB.php - at February 8, 2020.
@@ -11,7 +12,7 @@ use Mpdo\Strings;
  *
  * MPDO, My PDO.
  * DabaBase Connection and Manipulation
- * v.0.1.0
+ * v.0.1.1
  */
 
 class MDB
@@ -124,7 +125,7 @@ class MDB
      * In this case, the insert will not start or commit 
      * a transaction.
      *
-     * @return void
+     * @return $this
      */
     public function BeginTrans()
     {
@@ -137,7 +138,7 @@ class MDB
     /**
      * Roll back a transaction
      *
-     * @return void
+     * @return $this
      */
     public function RollbackTrans()
     {
@@ -151,7 +152,7 @@ class MDB
     /**
      * Commit Transaction
      *
-     * @return void
+     * @return $this
      */
     public function CommitTrans()
     {
@@ -429,6 +430,9 @@ class MDB
         return $this;
     }
 
+    /**
+     * @return $this
+     */
     public function table($table)
     {
         if (!isset($this->table)) {
@@ -448,7 +452,7 @@ class MDB
      * @param string $afield
      * @param string $operator
      * @param string $bfield
-     * @return this 
+     * @return $this 
      */
     public function join($table, $afield, $operator, $bfield)
     {
@@ -518,15 +522,17 @@ class MDB
             } else {
                 $operator = '=';
                 $content = '';
-                //                throw new \Exception("Parâmetros passados para método where estão incompletos. ($field, $operator, $content)");
+                // throw new \Exception("Parâmetros passados para método where estão incompletos. ($field, $operator, $content)");
             }
         }
 
-        return json_decode(json_encode([
-            'field' => $field,
-            'operator' => $operator,
-            'content' => $content,
-        ]));
+        $resp = new stdClass();
+        $resp->field = $field;
+        $resp->operator = $operator;
+        $resp->content = $content;
+
+        return $resp;
+
     }
 
     /**
@@ -562,10 +568,7 @@ class MDB
         /**
          * Corrige o operador
          */
-        if (
-            is_string($operator) &&
-            is_string($content)
-        ) {
+        if (is_string($operator) && is_string($content)) {
             if (
                 (strlen($operator) <= 0 && strlen($content) <= 0) ||
                 (strlen($operator) <= 0 && strlen($content) >= 1)
@@ -849,7 +852,7 @@ class MDB
      * Chave e regra ou valor da chave
      *
      * @param string $key
-     * @return this
+     * @return $this
      */
     public function key($key)
     {
@@ -867,7 +870,7 @@ class MDB
      * gera um Html DataList com retorno do sql query.
      *
      * @param array $htmldatalist
-     * @return this
+     * @return $this
      */
     public function htmldatalist($htmldatalist)
     {
@@ -1134,12 +1137,20 @@ class MDB
         $this->cleanAll();
 
         $eof = $count > 0 ? false : true;
-        $fields = json_decode(json_encode($fields,JSON_FORCE_OBJECT));
-        return json_decode(json_encode([
-            'count' => $count,
-            'EOF' => $eof,
-            'fields' => $fields,
-        ]));
+        $fields = json_decode(json_encode($fields, JSON_FORCE_OBJECT));
+
+        $resp = new stdClass();
+        $resp->count = $count;
+        $resp->EOF = $eof;
+        $resp->fields = $fields;
+
+        return $resp;
+
+        // return json_decode(json_encode([
+        //     'count' => $count,
+        //     'EOF' => $eof,
+        //     'fields' => $fields,
+        // ], JSON_FORCE_OBJECT));
     }
 
     public function debug($active = false)

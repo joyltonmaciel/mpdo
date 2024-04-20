@@ -1,6 +1,7 @@
 {
     "name": "joyltonmaciel/mpdo",
     "type": "library",
+    "version": "0.1.1",
     "description": "My Personal PDO Library for PostgreSQL",
     "license": ["GPL-3.0+", "LGPL-3.0+"],
     "authors": [
